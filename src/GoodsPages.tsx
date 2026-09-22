@@ -58,6 +58,26 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
 function FilterBar({ children }: { children: ReactNode }) {
   return <Card className="p-4 mb-4">{children}</Card>;
 }
+function FField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-[#64748B] font-medium">{label}</label>
+      {children}
+    </div>
+  );
+}
+// 统计指标名：hover 时展示口径说明 tooltip
+function StatLabel({ label, tip, className = "" }: { label: string; tip: string; className?: string }) {
+  return (
+    <span className={`relative inline-flex items-center gap-1 group cursor-help ${className}`}>
+      {label}
+      <Icon d={I.info} size={11} className="text-[#CBD5E1] group-hover:text-[#64748B] transition-colors" />
+      <span className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block whitespace-nowrap px-2.5 py-1.5 rounded-md bg-[#0F172A]/90 text-white text-[11px] font-normal shadow-lg z-20 pointer-events-none">
+        {tip}
+      </span>
+    </span>
+  );
+}
 function Inp({ value, onChange, placeholder, className = "" }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
   return <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={`h-9 border border-[#E2E8F0] rounded-md text-sm px-3 bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] ${className}`} />;
 }
@@ -164,12 +184,15 @@ function PageHeader({ title, children }: { title: string; children?: ReactNode }
     </div>
   );
 }
-function TabBar({ tabs, active, onChange }: { tabs: string[]; active: string; onChange: (t: string) => void }) {
+function TabBar({ tabs, active, onChange, action }: { tabs: string[]; active: string; onChange: (t: string) => void; action?: ReactNode }) {
   return (
-    <div className="flex gap-0 border-b border-[#E2E8F0] mb-4 overflow-x-auto">
-      {tabs.map(t => (
-        <button key={t} onClick={() => onChange(t)} className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${active === t ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-[#64748B] hover:text-[#334155]"}`}>{t}</button>
-      ))}
+    <div className="flex items-center gap-2 border-b border-[#E2E8F0] mb-4">
+      <div className="flex gap-0 overflow-x-auto flex-1 min-w-0">
+        {tabs.map(t => (
+          <button key={t} onClick={() => onChange(t)} className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${active === t ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-[#64748B] hover:text-[#334155]"}`}>{t}</button>
+        ))}
+      </div>
+      {action}
     </div>
   );
 }
@@ -188,6 +211,55 @@ function InfoGrid({ rows }: { rows: [string, ReactNode][] }) {
 function SectionLabel({ children }: { children: ReactNode }) {
   return <div className="text-sm font-semibold text-[#0F172A] mb-3">{children}</div>;
 }
+
+// 与运营后台点位详情保持一致的字段/徽章组件
+function Field({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div>
+      <div className="text-xs text-[#94A3B8] mb-1">{label}</div>
+      <div className="text-sm text-[#334155]">{value}</div>
+    </div>
+  );
+}
+function YNBadge({ yes }: { yes: boolean }) {
+  return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${yes ? "bg-[#F0FDF4] text-[#16A34A]" : "bg-[#F3F4F6] text-[#6B7280]"}`}>{yes ? "是" : "否"}</span>;
+}
+function AuditBadge({ s }: { s: string }) {
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s === "审核通过" ? "bg-[#F0FDF4] text-[#16A34A]" : s === "待审核" ? "bg-[#FFFBEB] text-[#D97706]" : "bg-[#FEF2F2] text-[#DC2626]"}`}>{s}</span>;
+}
+
+// 智能柜详情 · 与点位详情对齐的写死数据
+const CAB_WO_ROWS = [
+  { model: "XC-PRO-6L", code: "DEV-20240101", installPos: "A座大厅入口左侧，正对电梯口", planTime: "2024-01-05 09:00", customLook: "是", report: "是", elevator: "是", shed: "否", actualTime: "2024-01-05 14:00", engineer: "王工", auditStatus: "审核通过", submitter: "李明", auditor: "张总", createTime: "2024-01-04 16:00", auditTime: "2024-01-06 10:00", remark: "需提前联系物业申请施工证" },
+  { model: "XC-PRO-6L", code: "DEV-20240101", installPos: "—", planTime: "2024-03-15 09:00", customLook: "否", report: "否", elevator: "是", shed: "否", actualTime: "2024-03-16 11:00", engineer: "赵工", auditStatus: "审核通过", submitter: "陈静", auditor: "张总", createTime: "2024-03-14 14:30", auditTime: "2024-03-17 09:00", remark: "维修更换电路板" },
+  { model: "XC-PRO-6L", code: "DEV-20240101", installPos: "—", planTime: "2024-09-01 09:00", customLook: "否", report: "是", elevator: "是", shed: "否", actualTime: "—", engineer: "刘工", auditStatus: "待审核", submitter: "王芳", auditor: "—", createTime: "2024-08-31 16:00", auditTime: "—", remark: "" },
+];
+const CAB_SALES_RANK = [
+  { rank: 1, name: "农夫山泉 550ml", qty: 312, amount: "¥624.00" },
+  { rank: 2, name: "东方树叶 500ml", qty: 287, amount: "¥861.00" },
+  { rank: 3, name: "乐事薯片 75g", qty: 254, amount: "¥635.00" },
+  { rank: 4, name: "元气森林苏打水", qty: 231, amount: "¥693.00" },
+  { rank: 5, name: "百岁山矿泉水", qty: 198, amount: "¥396.00" },
+  { rank: 6, name: "良品铺子坚果", qty: 176, amount: "¥880.00" },
+  { rank: 7, name: "统一冰红茶 500ml", qty: 162, amount: "¥324.00" },
+  { rank: 8, name: "卫龙辣条 28g", qty: 148, amount: "¥222.00" },
+  { rank: 9, name: "三只松鼠混合坚果", qty: 134, amount: "¥938.00" },
+  { rank: 10, name: "可口可乐 330ml", qty: 121, amount: "¥363.00" },
+];
+const CAB_RESTOCK_ROWS = [
+  { id: "RO-2025-0301-001", batch: "第1批", creator: "张运营", executor: "李补货", time: "2025-03-01 10:00", qty: 48, done: "2025-03-01 14:30", status: "已完成" },
+  { id: "RO-2025-0210-003", batch: "第1批", creator: "王主管", executor: "陈补货", time: "2025-02-10 09:30", qty: 36, done: "2025-02-10 13:00", status: "已完成" },
+  { id: "RO-2025-0118-002", batch: "第2批", creator: "张运营", executor: "—", time: "2025-01-18 08:00", qty: 24, done: "—", status: "待履约" },
+];
+const CAB_RESTOCK_DAYS = [
+  { day: "周一", enabled: true, time: "09:00", threshold: "20" },
+  { day: "周二", enabled: true, time: "09:00", threshold: "20" },
+  { day: "周三", enabled: true, time: "09:00", threshold: "20" },
+  { day: "周四", enabled: true, time: "09:00", threshold: "20" },
+  { day: "周五", enabled: true, time: "09:00", threshold: "20" },
+  { day: "周六", enabled: false, time: "09:00", threshold: "20" },
+  { day: "周日", enabled: false, time: "09:00", threshold: "20" },
+];
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 const CABINETS = [
@@ -254,27 +326,37 @@ function SmartCabinetList({ onDetail, onInventory, onRestock }: { onDetail: () =
         <Btn v="secondary" icon={I.download}>导出SKU列表</Btn>
       </PageHeader>
       <FilterBar>
-        <div className="flex flex-wrap gap-2 items-end">
-          <Inp value={name} onChange={setName} placeholder="点位名称/编码" className="w-40" />
-          <Inp value={customer} onChange={setCustomer} placeholder="点位客户名称/编码" className="w-44" />
-          <Inp value={asset} onChange={setAsset} placeholder="资产编码" className="w-36" />
-          <Sel value={level} onChange={setLevel} className="w-32">
-            {["全部", "S+", "S", "A", "B", "C", "D", "N"].map(v => <option key={v}>{v}</option>)}
-          </Sel>
-          <Sel value={warehouse} onChange={setWarehouse} className="w-40">
-            {["全部", "深圳中央仓", "华南区域仓", "华东配送仓"].map(v => <option key={v}>{v}</option>)}
-          </Sel>
-          <Sel value={province} onChange={setProvince} className="w-28">
-            {["全部", "广东省", "上海市", "北京市", "四川省"].map(v => <option key={v}>{v}</option>)}
-          </Sel>
-          <Sel value={city} onChange={setCity} className="w-28">
-            {["全部", "深圳市", "广州市", "上海市", "北京市"].map(v => <option key={v}>{v}</option>)}
-          </Sel>
-          <Sel value={district} onChange={setDistrict} className="w-28">
-            {["全部", "南山区", "天河区", "浦东新区", "海淀区"].map(v => <option key={v}>{v}</option>)}
-          </Sel>
-          <Btn v="secondary" onClick={resetFilters}>重置</Btn>
-          <Btn v="primary" icon={I.search}>搜索</Btn>
+        <div className="flex flex-wrap gap-x-3 gap-y-3 items-start">
+          <FField label="点位名称/编码"><Inp value={name} onChange={setName} placeholder="请输入点位名称/编码" className="w-40" /></FField>
+          <FField label="点位客户"><Inp value={customer} onChange={setCustomer} placeholder="客户名称/编码" className="w-44" /></FField>
+          <FField label="资产编码"><Inp value={asset} onChange={setAsset} placeholder="请输入资产编码" className="w-36" /></FField>
+          <FField label="点位等级">
+            <Sel value={level} onChange={setLevel} className="w-32">
+              {["全部", "S+", "S", "A", "B", "C", "D", "N"].map(v => <option key={v}>{v}</option>)}
+            </Sel>
+          </FField>
+          <FField label="关联供货仓库">
+            <Sel value={warehouse} onChange={setWarehouse} className="w-40">
+              {["全部", "深圳中央仓", "华南区域仓", "华东配送仓"].map(v => <option key={v}>{v}</option>)}
+            </Sel>
+          </FField>
+          <FField label="地区">
+            <div className="flex gap-2">
+              <Sel value={province} onChange={setProvince} className="w-28">
+                {["全部", "广东省", "上海市", "北京市", "四川省"].map(v => <option key={v}>{v}</option>)}
+              </Sel>
+              <Sel value={city} onChange={setCity} className="w-28">
+                {["全部", "深圳市", "广州市", "上海市", "北京市"].map(v => <option key={v}>{v}</option>)}
+              </Sel>
+              <Sel value={district} onChange={setDistrict} className="w-28">
+                {["全部", "南山区", "天河区", "浦东新区", "海淀区"].map(v => <option key={v}>{v}</option>)}
+              </Sel>
+            </div>
+          </FField>
+          <div className="flex gap-2 self-end">
+            <Btn v="secondary" onClick={resetFilters}>重置</Btn>
+            <Btn v="primary" icon={I.search}>搜索</Btn>
+          </div>
         </div>
       </FilterBar>
       <div className="grid grid-cols-4 gap-4 mb-4">
@@ -320,27 +402,13 @@ function SmartCabinetList({ onDetail, onInventory, onRestock }: { onDetail: () =
 // ═══════════════════════════════════════════════════════════════════════════════
 // 2. SmartCabinetDetail
 // ═══════════════════════════════════════════════════════════════════════════════
-function SmartCabinetDetail({ onBack, onInventory }: { onBack: () => void; onInventory: () => void }) {
-  const tabs = ["点位信息", "商务合同信息", "设备信息", "设备云信息", "运营配置", "经营数据", "工单记录", "补货记录"];
+function SmartCabinetDetail({ onBack, onInventory, onEditLocation }: { onBack: () => void; onInventory: () => void; onEditLocation?: () => void }) {
+  const tabs = ["点位信息", "联系人信息", "设备信息", "设备云信息", "运营配置", "工单记录", "经营数据", "补货记录", "商务/合同信息"];
   const [tab, setTab] = useState("点位信息");
-  const [autoRestock, setAutoRestock] = useState(true);
   const [photoModal, setPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(0);
-  const [customer, setCustomer] = useState("腾讯科技");
-  const [whWarehouse, setWhWarehouse] = useState("深圳中央仓");
-  const [siteName, setSiteName] = useState("科技园A座大厅");
-  const [address, setAddress] = useState("广东省深圳市南山区科技园A座1楼大厅");
-  const [latlng, setLatlng] = useState("22.5431,113.9408");
-  const [coverage, setCoverage] = useState("2000");
-  const [scene1, setScene1] = useState("商务办公");
-  const [scene2, setScene2] = useState("写字楼");
-  const [installPos, setInstallPos] = useState("电梯口旁");
-  const [compSmart, setCompSmart] = useState("否");
-  const [compTrad, setCompTrad] = useState("否");
-  const [nearShop, setNearShop] = useState("是");
-  const [remark, setRemark] = useState("");
+  const [woDetail, setWoDetail] = useState<number | null>(null);
 
-  const skuRank = [...SKU_LIST].map(s => ({ name: s.name, sales: Math.floor(s.avgSale * 10), revenue: Math.floor(s.avgSale * 10 * s.price) })).sort((a, b) => b.sales - a.sales);
 
   return (
     <div className="p-6 bg-[#F5F7FA] min-h-screen">
@@ -355,87 +423,93 @@ function SmartCabinetDetail({ onBack, onInventory }: { onBack: () => void; onInv
         <StatCard label="本月总订单数" value="2,840" sub="单" accent="#D97706" />
       </div>
       <Card className="p-4">
-        <TabBar tabs={tabs} active={tab} onChange={setTab} />
+        <TabBar tabs={tabs} active={tab} onChange={setTab} action={
+          onEditLocation && (
+            <Btn v="primary" icon={I.edit} onClick={onEditLocation}>编辑点位信息</Btn>
+          )
+        } />
         {tab === "点位信息" && (
-          <div className="space-y-4">
-            <Card className="p-4">
-              <SectionLabel>基本信息</SectionLabel>
-              <div className="grid grid-cols-3 gap-x-8 gap-y-5 mt-4">
-                {([
-                  ["归属客户", customer],
-                  ["关联供货仓库", whWarehouse],
-                  ["点位名称", siteName],
-                  ["点位地区", "广东省 / 深圳市 / 南山区"],
-                  ["详细地址", address],
-                  ["覆盖人数", coverage],
-                  ["一级场景", scene1],
-                  ["二级场景", scene2],
-                  ["设备安装位置", installPos],
-                  ["是否有竞对智能机", compSmart],
-                  ["是否有竞对传统机", compTrad],
-                  ["百米内是否有便利店", nearShop],
-                ] as [string, string][]).map(([label, value]) => (
-                  <div key={label}>
-                    <div className="text-xs text-[#94A3B8] mb-1">{label}</div>
-                    <div className="text-sm text-[#334155]">{value || "—"}</div>
-                  </div>
-                ))}
-                <div className="col-span-3">
-                  <div className="text-xs text-[#94A3B8] mb-1">点位信息备注</div>
-                  <div className="text-sm text-[#334155]">{remark || "—"}</div>
+          <div className="space-y-5">
+            <div className="grid grid-cols-3 gap-x-8 gap-y-5">
+              <Field label="归属客户" value={<span className="text-[#2563EB] font-medium">腾讯科技</span>} />
+              <Field label="关联供货仓库" value="深圳中央仓" />
+              <Field label="点位名称" value="科技园A座大厅" />
+              <Field label="点位地区" value="广东省 · 深圳市 · 南山区" />
+              <Field label="详细地址" value="广东省深圳市南山区科技园A座1楼大厅" />
+              <Field label="覆盖人数" value="约 2,000 人" />
+              <Field label="一级场景" value="商务办公" />
+              <Field label="二级场景" value="写字楼" />
+              <Field label="设备安装位置" value="电梯口旁" />
+              <Field label="竞对智能售货机" value={<YNBadge yes={false} />} />
+              <Field label="竞对传统售货机" value={<YNBadge yes={false} />} />
+              <Field label="百米内便利店" value={<YNBadge yes={true} />} />
+              <div className="col-span-3">
+                <Field label="点位信息备注" value={<span className="text-[#64748B]">大厅人流量大，早晚高峰明显，建议保持满货。</span>} />
+              </div>
+            </div>
+            <div className="border-t border-[#F1F5F9] pt-5">
+              <div className="text-xs text-[#94A3B8] mb-2">经纬度 <span className="text-[#CBD5E1]">— 位置示意，只读</span></div>
+              <div className="relative h-40 rounded-lg border border-[#E2E8F0] overflow-hidden bg-[#E8EEF0]">
+                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 160">
+                  <rect width="800" height="160" fill="#E8EEF0" />
+                  <rect x="60" y="14" width="150" height="56" rx="4" fill="#DCE9DC" />
+                  <rect x="590" y="80" width="170" height="66" rx="4" fill="#DCE9DC" />
+                  <rect x="350" y="100" width="120" height="46" rx="4" fill="#E3E8E4" />
+                  <path d="M0 40 H800 M0 95 H800 M120 0 V160 M330 0 V160 M560 0 V160 M720 0 V160" stroke="#FFFFFF" strokeWidth="9" fill="none" />
+                  <path d="M0 128 Q 200 108 420 132 T 800 118" stroke="#C7DCE8" strokeWidth="14" fill="none" opacity="0.8" />
+                </svg>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
+                  <Icon d={I.location} size={30} className="text-[#2563EB] drop-shadow-md" />
                 </div>
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 rounded-md px-2.5 py-1 shadow-sm">
+                  <Icon d={I.location} size={12} className="text-[#2563EB]" />
+                  <span className="font-mono text-xs text-[#64748B]">113.940800, 22.543100</span>
+                </div>
+                <span className="absolute top-2 right-2 text-[10px] text-[#94A3B8] bg-white/85 rounded px-1.5 py-0.5">地图示意 · 只读</span>
               </div>
-            </Card>
-            <Card className="p-4">
-              <SectionLabel>经纬度与地图定位</SectionLabel>
-              <div className="flex gap-3 mb-3">
-                <div className="flex-1"><div className="text-xs text-[#64748B] mb-1">经纬度</div><Inp value={latlng} onChange={setLatlng} className="w-full" /></div>
-                <div className="flex-1"><div className="text-xs text-[#64748B] mb-1">坐标搜索</div><div className="flex gap-2"><Inp value="" onChange={() => {}} placeholder="输入地址搜索" className="flex-1" /><Btn v="primary">查询</Btn></div></div>
-              </div>
-              <div className="h-40 bg-[#E8F0FE] rounded-lg flex flex-col items-center justify-center text-[#64748B] border border-[#BFDBFE]">
-                <Icon d={I.location} size={32} className="text-[#2563EB] mb-2" />
-                <div className="text-sm font-medium text-[#334155]">广东省深圳市南山区科技园A座</div>
-                <div className="text-xs text-[#94A3B8]">22.5431°N, 113.9408°E</div>
-              </div>
-            </Card>
-            <Card className="p-4">
-              <SectionLabel>场地照片</SectionLabel>
-              <div className="flex gap-3">
-                {[["正面照", "#DBEAFE"], ["内部照", "#DCFCE7"], ["周边环境", "#FEF3C7"]].map(([label, bg], idx) => (
-                  <div key={label} className="flex-1 cursor-pointer" onClick={() => { setSelectedPhoto(idx); setPhotoModal(true); }}>
-                    <div className="h-28 rounded-lg flex items-center justify-center text-sm text-[#64748B] font-medium border border-[#E2E8F0] hover:border-[#2563EB] transition-colors" style={{ background: bg as string }}>{label}</div>
-                  </div>
+            </div>
+            <div className="border-t border-[#F1F5F9] pt-5">
+              <div className="text-xs text-[#94A3B8] mb-2">场地照片 <span className="text-[#CBD5E1]">— 点击放大</span></div>
+              <div className="flex gap-2">
+                {["#DBEAFE", "#EDE9FE", "#DCFCE7"].map((bg, i) => (
+                  <button key={i} onClick={() => { setSelectedPhoto(i); setPhotoModal(true); }}
+                    className="w-20 h-20 rounded-lg flex items-center justify-center hover:ring-2 hover:ring-[#2563EB]/40 transition-all flex-shrink-0" style={{ background: bg }}>
+                    <svg viewBox="0 0 40 40" className="w-8 h-8 opacity-40"><rect x="4" y="10" width="32" height="22" rx="3" fill="#2563EB" /><circle cx="14" cy="18" r="3" fill="white" /><path d="M4 28l9-7 7 6 5-4 11 9" fill="none" stroke="white" strokeWidth="2" strokeLinejoin="round" /></svg>
+                  </button>
                 ))}
               </div>
-            </Card>
+            </div>
           </div>
         )}
-        {tab === "商务合同信息" && (
-          <Card className="p-4">
-            <InfoGrid rows={[
-              ["合同附件", <a href="#" className="text-[#2563EB] underline flex items-center gap-1"><Icon d={I.download} size={14} />合同文件.pdf</a>],
-              ["联系人姓名", "张建国"], ["联系电话", "138-0013-8000"],
-              ["联系人性别", "男"], ["联系人微信号", "zhangjg_sz"],
-              ["联系人邮箱", "zhang@techinc.com"], ["联系人身份", "场地负责人"],
-            ]} />
-          </Card>
+        {tab === "联系人信息" && (
+          <div className="grid grid-cols-3 gap-x-8 gap-y-5">
+            <Field label="联系人姓名" value="张建国" />
+            <Field label="联系电话" value="138 0013 8000" />
+            <Field label="联系人性别" value="男" />
+            <Field label="联系人微信号" value="zhangjg_sz" />
+            <Field label="联系人邮箱" value="zhang@techinc.com" />
+            <Field label="联系人身份" value="场地负责人" />
+          </div>
         )}
         {tab === "设备信息" && (
-          <Card className="p-4">
-            <InfoGrid rows={[
-              ["设备资产编码", "DEV-20240101"], ["尺寸", "500×600×1800mm"],
-              ["功能属性", "冷藏+常温"], ["设备型号", "XC-PRO-6L"],
-              ["层板配置", "6层×8格"], ["额定电压", "220V"],
-              ["额定电流", "2.5A"], ["额定功率", "550W"],
-              ["额定功耗", "3.5kWh/天"], ["是否有刷脸屏", "是"],
-              ["是否有摄像头", "是"],
-            ]} />
-          </Card>
+          <div className="grid grid-cols-3 gap-x-8 gap-y-5">
+            <Field label="设备资产编码" value={<span className="font-mono text-xs bg-[#F1F5F9] px-2 py-0.5 rounded text-[#64748B]">DEV-20240101</span>} />
+            <Field label="设备型号" value="XC-PRO-6L" />
+            <Field label="功能属性" value="冷藏+常温" />
+            <Field label="尺寸" value="W500 × D600 × H1800 mm" />
+            <Field label="层板配置" value="6 层，每层 8 格" />
+            <Field label="额定电压" value="220V / 50Hz" />
+            <Field label="额定电流" value="2.5A" />
+            <Field label="额定功率" value="550W" />
+            <Field label="额定功耗" value="≤ 3.5 kWh/24h" />
+            <Field label="刷脸屏" value={<YNBadge yes={true} />} />
+            <Field label="摄像头" value={<YNBadge yes={true} />} />
+          </div>
         )}
         {tab === "设备云信息" && (
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "在线状态", value: <StatusPill label="在线" color="green" />, icon: I.wifi, ts: "2024-09-04 14:32:05" },
+              { label: "在线状态", value: <span className="inline-flex items-center justify-center w-full px-3 py-1.5 rounded-full text-xs font-semibold bg-[#DCFCE7] text-[#16A34A]">在线</span>, icon: I.wifi, ts: "2024-09-04 14:32:05" },
               { label: "实时温度", value: <span className="text-2xl font-bold text-[#0F172A]">4.2°C</span>, icon: I.thermometer, ts: "2024-09-04 14:31:58" },
               { label: "实时功率", value: <span className="text-2xl font-bold text-[#0F172A]">312W</span>, icon: I.zap, ts: "2024-09-04 14:32:01" },
             ].map(c => (
@@ -451,106 +525,248 @@ function SmartCabinetDetail({ onBack, onInventory }: { onBack: () => void; onInv
           </div>
         )}
         {tab === "运营配置" && (
-          <Card className="p-4 space-y-4">
-            <div>
-              <div className="text-xs text-[#64748B] mb-1">补货设置说明</div>
-              <textarea className="w-full h-20 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none" defaultValue="每周二、四进行常规补货，如遇节假日提前一天" />
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-semibold text-[#0F172A]">补货设置</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#94A3B8]">只读</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-[#334155]">自动补货单</span>
-              <Toggle on={autoRestock} onChange={setAutoRestock} />
-              <span className="text-xs text-[#64748B]">{autoRestock ? "已开启" : "已关闭"}</span>
+            <p className="text-xs text-[#94A3B8] mb-3">该点位允许自动补货的时间范围及补货阈值</p>
+            <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+              <div className="grid bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-medium text-[#6B7280]"
+                style={{ gridTemplateColumns: "120px 1fr 200px" }}>
+                <div className="px-4 py-2.5">适用日</div>
+                <div className="px-4 py-2.5">允许补货时间</div>
+                <div className="px-4 py-2.5">自动补货阈值（件）</div>
+              </div>
+              {CAB_RESTOCK_DAYS.filter(d => d.enabled).map(d => (
+                <div key={d.day} className="grid items-center border-b border-[#F1F5F9] last:border-0 bg-white"
+                  style={{ gridTemplateColumns: "120px 1fr 200px" }}>
+                  <div className="px-4 py-3 flex items-center gap-2">
+                    <Icon d={I.check} size={14} className="text-[#2563EB]" />
+                    <span className="text-sm font-medium text-[#0F172A]">{d.day}</span>
+                  </div>
+                  <div className="px-4 py-3 text-sm text-[#334155] flex items-center gap-1.5">
+                    <Icon d={I.clock} size={14} className="text-[#94A3B8]" />
+                    {d.time}
+                  </div>
+                  <div className="px-4 py-3 text-sm text-[#334155]">{d.threshold} <span className="text-xs text-[#94A3B8]">件</span></div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-[#334155]">自动补货阈值</span>
-              <input type="number" defaultValue={20} className="w-20 h-9 border border-[#E2E8F0] rounded-md text-sm px-3 focus:outline-none" />
-              <span className="text-sm text-[#64748B]">%（库存低于此比例时触发）</span>
-            </div>
-            <Btn v="primary">保存配置</Btn>
-          </Card>
+            <p className="text-xs text-[#CBD5E1] mt-2">未勾选的日期（{CAB_RESTOCK_DAYS.filter(d => !d.enabled).map(d => d.day).join("、")}）不自动出单</p>
+          </div>
         )}
         {tab === "经营数据" && (
-          <>
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <StatCard label="昨日总销售额" value="¥3,241" accent="#2563EB" />
-              <StatCard label="本月总销售额" value="¥48,200" accent="#059669" />
-              <StatCard label="昨日总订单数" value="156" accent="#7C3AED" />
-              <StatCard label="本月总订单数" value="2,840" accent="#D97706" />
+          <div>
+            <div className="text-sm font-semibold text-[#0F172A] mb-3">KPI 指标卡</div>
+            <div className="grid grid-cols-2 gap-4 mb-7">
+              {[
+                { label: "销售额汇总", yesterday: "¥3,241", month: "¥48,200", sub: "不含未支付和失败订单" },
+                { label: "订单数汇总", yesterday: "156 笔", month: "2,840 笔", sub: "不含未支付和失败订单" },
+              ].map(k => (
+                <div key={k.label} className="rounded-xl border border-[#E2E8F0] p-5">
+                  <div className="text-xs text-[#94A3B8] mb-3">{k.label}</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-[10px] text-[#94A3B8] mb-1">昨日总计</div>
+                      <div className="text-xl font-bold text-[#0F172A]">{k.yesterday}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[#94A3B8] mb-1">本月总计</div>
+                      <div className="text-xl font-bold text-[#2563EB]">{k.month}</div>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-[#94A3B8] mt-3 pt-3 border-t border-[#F1F5F9]">{k.sub}</div>
+                </div>
+              ))}
             </div>
-            <Card>
-              <div className="p-4 border-b border-[#E2E8F0] font-semibold text-sm text-[#0F172A]">SKU销量排行榜</div>
-              <table className="w-full">
-                <THead cols={["排名", "SKU名称", "销量（件）", "销售额（元）"]} />
-                <tbody>
-                  {skuRank.slice(0, 10).map((r, i) => (
-                    <TR key={r.name}>
-                      <TD><span className={`inline-flex w-6 h-6 rounded-full items-center justify-center text-xs font-bold ${i < 3 ? "bg-[#2563EB] text-white" : "bg-[#F1F5F9] text-[#64748B]"}`}>{i + 1}</span></TD>
-                      <TD>{r.name}</TD>
-                      <TD>{r.sales}</TD>
-                      <TD>¥{r.revenue.toFixed(0)}</TD>
-                    </TR>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-[#0F172A]">商品销量排行榜</span>
+              <span className="text-xs text-[#94A3B8]">默认展示 TOP 10</span>
+            </div>
+            <table className="w-full text-sm mb-2">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                  {["排名", "商品名称", "销量", "销售额"].map(h => (
+                    <th key={h} className="py-2.5 px-3 text-left text-xs font-medium text-[#64748B]">{h}</th>
                   ))}
-                </tbody>
-              </table>
-            </Card>
-          </>
+                </tr>
+              </thead>
+              <tbody>
+                {CAB_SALES_RANK.map(r => (
+                  <tr key={r.rank} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC]">
+                    <td className="py-2.5 px-3">
+                      <span className={`inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold
+                        ${r.rank === 1 ? "bg-[#FEF9C3] text-[#CA8A04]" : r.rank === 2 ? "bg-[#F1F5F9] text-[#475569]" : r.rank === 3 ? "bg-[#FFF7ED] text-[#C2410C]" : "text-[#94A3B8]"}`}>
+                        {r.rank}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-[#334155]">{r.name}</td>
+                    <td className="py-2.5 px-3 font-medium text-[#0F172A]">{r.qty}</td>
+                    <td className="py-2.5 px-3 font-semibold text-[#2563EB]">{r.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         {tab === "工单记录" && (
-          <Card>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium text-[#0F172A]">装机工单列表</span>
+              <span className="text-xs text-[#94A3B8] bg-[#F1F5F9] px-2 py-0.5 rounded-full">一期仅展示装机工单</span>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px]">
-                <THead cols={["设备型号", "资产条码", "预计安装时间", "实际安装时间", "安装工程人员", "审核状态", "提交人", "审核人", "创建时间", "审核完成时间", "备注"]} />
+              <table className="w-full text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                    {["设备型号","资产条码","预计安装时间","实际安装时间","安装工程人员","审核状态","提交人","审核人","创建时间","审核完成时间","备注","操作"].map(h => (
+                      <th key={h} className="py-2.5 px-3 text-left text-xs font-medium text-[#64748B]">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
                 <tbody>
-                  {[
-                    { model: "XC-PRO-6L", asset: "DEV-20240101", planned: "2024-01-05", actual: "2024-01-05", engineer: "王工", status: "已审核", submitter: "李明", reviewer: "张总", created: "2024-01-04", reviewDone: "2024-01-06", note: "正常安装" },
-                    { model: "XC-PRO-6L", asset: "DEV-20240101", planned: "2024-03-15", actual: "2024-03-16", engineer: "赵工", status: "已审核", submitter: "陈静", reviewer: "张总", created: "2024-03-14", reviewDone: "2024-03-17", note: "维修更换电路板" },
-                    { model: "XC-PRO-6L", asset: "DEV-20240101", planned: "2024-09-01", actual: "", engineer: "刘工", status: "待审核", submitter: "王芳", reviewer: "", created: "2024-08-31", reviewDone: "", note: "" },
-                  ].map((r, i) => (
-                    <TR key={i}>
-                      <TD>{r.model}</TD><TD className="font-mono text-xs">{r.asset}</TD>
-                      <TD>{r.planned}</TD><TD>{r.actual || "—"}</TD><TD>{r.engineer}</TD>
-                      <TD><StatusPill label={r.status} color={r.status === "已审核" ? "green" : "orange"} /></TD>
-                      <TD>{r.submitter}</TD><TD>{r.reviewer || "—"}</TD>
-                      <TD>{r.created}</TD><TD>{r.reviewDone || "—"}</TD><TD>{r.note || "—"}</TD>
-                    </TR>
+                  {CAB_WO_ROWS.map((w, i) => (
+                    <tr key={i} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC]">
+                      <td className="py-3 px-3 text-[#334155]">{w.model}</td>
+                      <td className="py-3 px-3 font-mono text-xs text-[#64748B]">{w.code}</td>
+                      <td className="py-3 px-3 text-[#334155]">{w.planTime.slice(0, 10)}</td>
+                      <td className="py-3 px-3 text-[#334155]">{w.actualTime === "—" ? "—" : w.actualTime.slice(0, 10)}</td>
+                      <td className="py-3 px-3 text-[#334155]">{w.engineer}</td>
+                      <td className="py-3 px-3"><AuditBadge s={w.auditStatus} /></td>
+                      <td className="py-3 px-3 text-[#334155]">{w.submitter}</td>
+                      <td className="py-3 px-3 text-[#334155]">{w.auditor}</td>
+                      <td className="py-3 px-3 text-xs text-[#64748B]">{w.createTime}</td>
+                      <td className="py-3 px-3 text-xs text-[#64748B]">{w.auditTime}</td>
+                      <td className="py-3 px-3 text-xs text-[#64748B]">{w.remark || "—"}</td>
+                      <td className="py-3 px-3">
+                        <button onClick={() => setWoDetail(i)} className="text-xs text-[#2563EB] hover:underline">详情</button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         )}
         {tab === "补货记录" && (
-          <Card>
-            <div className="p-4 border-b border-[#E2E8F0] flex items-center gap-2">
-              <span className="text-sm text-[#64748B]">时间范围：</span>
-              <Sel value="最近3个月" onChange={() => {}} className="w-32">
-                <option>最近3个月</option><option>最近6个月</option><option>最近1年</option>
-              </Sel>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-[#0F172A]">补货记录</span>
+              <span className="text-xs text-[#94A3B8]">默认展示最近 3 个月</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-                <THead cols={["补货单号", "补货批次", "创建人员", "履约人员", "补货时间", "补货件数", "履约完成时间", "状态"]} />
+              <table className="w-full text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                    {["补货单号","补货批次","创建人员","履约人员","补货时间","补货件数","履约完成时间","状态"].map(h => (
+                      <th key={h} className="py-2.5 px-3 text-left text-xs font-medium text-[#64748B]">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
                 <tbody>
-                  {RESTOCK_ORDERS.slice(0, 5).map(r => (
-                    <TR key={r.id}>
-                      <TD className="font-mono text-xs text-[#2563EB]">{r.id}</TD>
-                      <TD>{r.batch}</TD><TD>{r.sorter || "—"}</TD><TD>{r.delivery || "—"}</TD>
-                      <TD>{r.lastDate}</TD><TD>{r.total}</TD>
-                      <TD>{r.deliveryDone || "—"}</TD>
-                      <TD><StatusPill label={r.status} color={statusColor(r.status)} /></TD>
-                    </TR>
+                  {CAB_RESTOCK_ROWS.map(r => (
+                    <tr key={r.id} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC]">
+                      <td className="py-3 px-3 font-mono text-xs text-[#2563EB]">{r.id}</td>
+                      <td className="py-3 px-3 text-[#334155]">{r.batch}</td>
+                      <td className="py-3 px-3 text-[#334155]">{r.creator}</td>
+                      <td className="py-3 px-3 text-[#334155]">{r.executor}</td>
+                      <td className="py-3 px-3 text-xs text-[#64748B]">{r.time}</td>
+                      <td className="py-3 px-3 font-medium text-[#0F172A]">{r.qty} 件</td>
+                      <td className="py-3 px-3 text-xs text-[#64748B]">{r.done}</td>
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${r.status === "已完成" ? "bg-[#F0FDF4] text-[#16A34A]" : "bg-[#FFFBEB] text-[#D97706]"}`}>{r.status}</span>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
+        )}
+        {tab === "商务/合同信息" && (
+          <div className="grid grid-cols-3 gap-x-8 gap-y-5">
+            <div className="col-span-3">
+              <Field label="合同附件" value={
+                <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC]">
+                    <Icon d={I.layers} size={14} className="text-[#2563EB]" />
+                    <span className="text-sm text-[#334155]">腾讯·科技园A座_合同_2024.pdf</span>
+                  </div>
+                  <button className="flex items-center gap-1 text-xs text-[#2563EB] hover:underline">
+                    <Icon d={I.download} size={12} />下载
+                  </button>
+                </div>
+              } />
+            </div>
+            <Field label="合同有效期" value="2024-01-01 ~ 2026-12-31" />
+            <Field label="保证金金额" value="¥5,000.00" />
+          </div>
         )}
       </Card>
       <Modal open={photoModal} onClose={() => setPhotoModal(false)} title="场地照片" footer={<Btn v="secondary" onClick={() => setPhotoModal(false)}>关闭</Btn>}>
         <div className="h-64 rounded-xl flex items-center justify-center text-[#64748B] text-sm font-medium" style={{ background: ["#DBEAFE", "#DCFCE7", "#FEF3C7"][selectedPhoto] }}>
-          {["正面照", "内部照", "周边环境"][selectedPhoto]}
+          {["大厅正面", "柜体内部", "周边环境"][selectedPhoto]}
         </div>
       </Modal>
+      {woDetail !== null && (() => { const w = CAB_WO_ROWS[woDetail]; return (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center" onClick={() => setWoDetail(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-[#0F172A]">装机工单详情</span>
+                <span className="font-mono text-xs font-semibold text-[#2563EB]">{w.code}</span>
+                <AuditBadge s={w.auditStatus} />
+              </div>
+              <button onClick={() => setWoDetail(null)} className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center hover:bg-[#E2E8F0]">
+                <Icon d={I.x} size={14} className="text-[#64748B]" />
+              </button>
+            </div>
+            <div className="text-xs text-[#94A3B8] mb-4">创建于 {w.createTime}</div>
+            <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+              {[
+                { l: "设备型号", v: <span>{w.model}</span> },
+                { l: "设备安装位置", v: <span>{w.installPos}</span> },
+                { l: "需求安装时间", v: <span>{w.planTime}</span> },
+                { l: "是否定制外观", v: <YNBadge yes={w.customLook === "是"} /> },
+                { l: "是否需提前报备", v: <YNBadge yes={w.report === "是"} /> },
+                { l: "是否有电梯", v: <YNBadge yes={w.elevator === "是"} /> },
+                { l: "是否需户外棚", v: <YNBadge yes={w.shed === "是"} /> },
+                { l: "设备资产条码", v: <span>{w.code}</span> },
+                { l: "实际安装时间", v: <span>{w.actualTime}</span> },
+                { l: "安装工程人员", v: <span>{w.engineer}</span> },
+                { l: "工单提交人", v: <span>{w.submitter}</span> },
+                { l: "工单审核人", v: <span>{w.auditor}</span> },
+                { l: "工单创建时间", v: <span>{w.createTime}</span> },
+                { l: "工单审核完成时间", v: <span>{w.auditTime}</span> },
+              ].map(f => (
+                <div key={f.l}>
+                  <div className="text-xs text-[#94A3B8] mb-1">{f.l}</div>
+                  <div className="text-sm text-[#334155]">{f.v}</div>
+                </div>
+              ))}
+            </div>
+            {w.customLook === "是" && (
+              <div className="mt-4">
+                <div className="text-xs text-[#94A3B8] mb-2">点位外观照片</div>
+                <div className="flex gap-2">
+                  {["正面", "侧面"].map(t => (
+                    <div key={t} className="w-14 h-14 rounded-lg bg-[#F5F7FA] border border-[#E2E8F0] flex items-center justify-center">
+                      <span className="text-[10px] text-[#94A3B8]">{t}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {w.remark && (
+              <div className="mt-4 pt-3 border-t border-[#F1F5F9]">
+                <span className="text-xs text-[#94A3B8]">备注（其他要求）：</span>
+                <span className="text-xs text-[#64748B]">{w.remark}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ); })()}
     </div>
   );
 }
@@ -605,15 +821,15 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
           <div className="text-xs font-medium text-[#94A3B8] mb-3">库存概况</div>
           <div className="grid grid-cols-4 gap-4 mb-4">
             {[
-              { label: "总预存量", value: "480", unit: "件", color: "#2563EB" },
-              { label: "实际库存", value: "432", unit: "件", color: "#16A34A" },
-              { label: "饮料库存", value: "216", unit: "件", color: "#0891B2" },
-              { label: "零食库存", value: "148", unit: "件", color: "#7C3AED" },
+              { label: "总预存", sub: "预存数", value: <span className="text-2xl font-bold text-[#2563EB]">480</span>, unit: "件" },
+              { label: "实际预存", sub: "实际预存数", value: <span className="text-2xl font-bold text-[#16A34A]">432</span>, unit: "件" },
+              { label: "饮料", sub: "饮料类目预存数 / 在售库存", value: <span className="text-2xl font-bold text-[#0891B2]">216<span className="text-sm text-[#94A3B8] font-medium"> / 198</span></span>, unit: "件" },
+              { label: "零食", sub: "零食品类预存数 / 在售库存", value: <span className="text-2xl font-bold text-[#7C3AED]">148<span className="text-sm text-[#94A3B8] font-medium"> / 132</span></span>, unit: "件" },
             ].map(s => (
               <div key={s.label}>
-                <div className="text-xs text-[#94A3B8] mb-1.5">{s.label}</div>
+                <div className="text-xs text-[#94A3B8] mb-1.5"><StatLabel label={s.label} tip={s.sub} /></div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</span>
+                  {s.value}
                   <span className="text-xs text-[#94A3B8]">{s.unit}</span>
                 </div>
               </div>
@@ -630,16 +846,16 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
           </div>
         </div>
 
-        {/* 货值分析 */}
+        {/* 货值 */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] px-5 py-4">
-          <div className="text-xs font-medium text-[#94A3B8] mb-4">货值分析</div>
+          <div className="text-xs font-medium text-[#94A3B8] mb-4">货值</div>
           <div className="space-y-4">
             <div>
-              <div className="text-xs text-[#64748B] mb-1">总货值</div>
+              <div className="text-xs text-[#64748B] mb-1"><StatLabel label="货值" tip="当前预存商品总货值（元）" /></div>
               <div className="text-2xl font-bold text-[#D97706]">¥8,640</div>
             </div>
             <div>
-              <div className="text-xs text-[#64748B] mb-1">件均价</div>
+              <div className="text-xs text-[#64748B] mb-1"><StatLabel label="件单价" tip="当前预存商品平均单价（元）" /></div>
               <div className="text-xl font-bold text-[#0F172A]">¥20.00</div>
             </div>
           </div>
@@ -650,11 +866,11 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
           <div className="text-xs font-medium text-[#94A3B8] mb-4">动销健康</div>
           <div className="space-y-4">
             <div>
-              <div className="text-xs text-[#64748B] mb-1">上新率</div>
+              <div className="text-xs text-[#64748B] mb-1"><StatLabel label="上新率" tip="上新商品数 / 总商品数 × 100%" /></div>
               <div className="text-2xl font-bold text-[#2563EB]">12%</div>
             </div>
             <div>
-              <div className="text-xs text-[#64748B] mb-1">无动销占比</div>
+              <div className="text-xs text-[#64748B] mb-1"><StatLabel label="无动销占比" tip="无动销商品数 / 总商品数 × 100%" /></div>
               <div className="text-xl font-bold text-[#DC2626]">8%</div>
             </div>
           </div>
@@ -749,6 +965,7 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
 
         {/* 表格区 */}
         <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-[#64748B] mb-2 px-1">商品列表</div>
           <Card className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1400px]">
@@ -783,7 +1000,6 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
                       <StickyOp>
                         <div className="flex gap-1">
                           <Btn v="ghost" onClick={() => setDelistModal(s)} className="text-xs px-2 h-7 text-[#DC2626]">下架</Btn>
-                          <Btn v="ghost" className="text-xs px-2 h-7"><Icon d={I.edit} size={12} /></Btn>
                         </div>
                       </StickyOp>
                     </TR>
@@ -804,13 +1020,13 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
       <Modal open={!!delistModal} onClose={() => { setDelistModal(null); setDelistReason(""); }} title="下架商品" footer={<><Btn v="secondary" onClick={() => { setDelistModal(null); setDelistReason(""); }}>取消</Btn><Btn v="danger" onClick={() => { setDelistModal(null); setDelistReason(""); }}>确认下架</Btn></>}>
         <div className="space-y-3">
           <div><div className="text-xs text-[#64748B] mb-1">SKU名称</div><div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B]">{delistModal?.name}</div></div>
-          <div><div className="text-xs text-[#64748B] mb-1">下架原因 <span className="text-[#DC2626]">*</span></div><textarea value={delistReason} onChange={e => setDelistReason(e.target.value.slice(0, 200))} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none" placeholder="请输入下架原因..." /><div className="text-right text-xs text-[#94A3B8]">{delistReason.length}/200</div></div>
+          <div><div className="text-xs text-[#64748B] mb-1">下架原因 <span className="text-[10px] text-[#94A3B8]">（选填）</span></div><textarea value={delistReason} onChange={e => setDelistReason(e.target.value.slice(0, 200))} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none" placeholder="请输入下架原因..." /><div className="text-right text-xs text-[#94A3B8]">{delistReason.length}/200</div></div>
         </div>
       </Modal>
       <Modal open={batchDelistModal} onClose={() => { setBatchDelistModal(false); setDelistReason(""); }} title="批量下架" footer={<><Btn v="secondary" onClick={() => { setBatchDelistModal(false); setDelistReason(""); }}>取消</Btn><Btn v="danger" onClick={() => { setBatchDelistModal(false); setDelistReason(""); }}>确认下架</Btn></>}>
         <div className="space-y-3">
           <div><div className="text-xs text-[#64748B] mb-1">确认下架商品数</div><div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B]">{checkedCount} 个商品</div></div>
-          <div><div className="text-xs text-[#64748B] mb-1">下架原因 <span className="text-[#DC2626]">*</span></div><textarea value={delistReason} onChange={e => setDelistReason(e.target.value.slice(0, 200))} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none" placeholder="请输入下架原因..." /><div className="text-right text-xs text-[#94A3B8]">{delistReason.length}/200</div></div>
+          <div><div className="text-xs text-[#64748B] mb-1">下架原因 <span className="text-[10px] text-[#94A3B8]">（选填）</span></div><textarea value={delistReason} onChange={e => setDelistReason(e.target.value.slice(0, 200))} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none" placeholder="请输入下架原因..." /><div className="text-right text-xs text-[#94A3B8]">{delistReason.length}/200</div></div>
         </div>
       </Modal>
       <Modal open={copyModal} onClose={() => setCopyModal(false)} title="复制商品库" footer={<><Btn v="secondary" onClick={() => setCopyModal(false)}>取消</Btn><Btn v="primary" onClick={() => setCopyModal(false)}>确定</Btn></>}>
@@ -1095,8 +1311,18 @@ function RestockOrderList({ onCreate, onDetail, onModify }: { onCreate: () => vo
   const [doneFrom, setDoneFrom] = useState("");
   const [doneTo, setDoneTo] = useState("");
   const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState(RESTOCK_ORDERS);
   const [returnModal, setReturnModal] = useState<string | null>(null);
   const [returnReason, setReturnReason] = useState("");
+  const [pushModal, setPushModal] = useState<string | null>(null);
+
+  // 退单：分车中及之后的履约中状态可退，退回至“待分车”
+  const canReturn = (s: string) => ["分车中", "分拣中", "配送中"].includes(s);
+  const confirmReturn = () => {
+    if (!returnModal) return;
+    setOrders(prev => prev.map(o => o.id === returnModal ? { ...o, status: "待分车", sorter: "", sortDone: "", delivery: "", deliveryDone: "" } : o));
+    setReturnModal(null); setReturnReason("");
+  };
 
   const resetFilters = () => {
     setOrderNo(""); setSiteName(""); setSiteId(""); setAssetCode(""); setCreator(""); setRelWarehouse("");
@@ -1113,23 +1339,35 @@ function RestockOrderList({ onCreate, onDetail, onModify }: { onCreate: () => vo
         <Btn v="primary" onClick={onCreate} icon={I.plus}>新建补货单</Btn>
       </PageHeader>
       <FilterBar>
-        <div className="flex flex-wrap gap-2 mb-2">
-          <Inp value={orderNo} onChange={setOrderNo} placeholder="补货单号" className="w-36" />
-          <Inp value={siteName} onChange={setSiteName} placeholder="点位名称" className="w-36" />
-          <Inp value={siteId} onChange={setSiteId} placeholder="点位编码" className="w-32" />
-          <Inp value={assetCode} onChange={setAssetCode} placeholder="设备资产编码" className="w-36" />
-          <Inp value={creator} onChange={setCreator} placeholder="补货创建人" className="w-32" />
-          <Inp value={relWarehouse} onChange={setRelWarehouse} placeholder="关联仓库" className="w-32" />
-        </div>
-        <div className="flex flex-wrap gap-2 items-end">
-          <Sel value={batchF} onChange={setBatchF} className="w-28">{["全部", "第一批次", "第二批次", "第三批次"].map(v => <option key={v}>{v}</option>)}</Sel>
-          <Sel value={statusF} onChange={setStatusF} className="w-28">{["全部", "待分车", "待分拣", "待配送", "分车中", "分拣中", "配送中", "履约完成", "履约失败", "已取消"].map(v => <option key={v}>{v}</option>)}</Sel>
-          <Sel value={isAutoF} onChange={setIsAutoF} className="w-28">{["全部", "是", "否"].map(v => <option key={v}>{v}</option>)}</Sel>
-          <div className="flex items-center gap-1"><span className="text-xs text-[#64748B] whitespace-nowrap">创建时间</span><input type="date" value={createFrom} onChange={e => setCreateFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" value={createTo} onChange={e => setCreateTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
-          <div className="flex items-center gap-1"><span className="text-xs text-[#64748B] whitespace-nowrap">推送履约</span><input type="date" onChange={e => setPushFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" onChange={e => setPushTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
-          <div className="flex items-center gap-1"><span className="text-xs text-[#64748B] whitespace-nowrap">履约完成</span><input type="date" onChange={e => setDoneFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" onChange={e => setDoneTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
-          <Btn v="primary" icon={I.search}>查询</Btn>
-          <Btn v="secondary" onClick={resetFilters}>重置</Btn>
+        <div className="flex flex-wrap gap-x-3 gap-y-3 items-start">
+          <FField label="补货单号"><Inp value={orderNo} onChange={setOrderNo} placeholder="请输入补货单号" className="w-36" /></FField>
+          <FField label="点位名称"><Inp value={siteName} onChange={setSiteName} placeholder="请输入点位名称" className="w-36" /></FField>
+          <FField label="点位编码"><Inp value={siteId} onChange={setSiteId} placeholder="请输入点位编码" className="w-32" /></FField>
+          <FField label="设备资产编码"><Inp value={assetCode} onChange={setAssetCode} placeholder="请输入设备资产编码" className="w-36" /></FField>
+          <FField label="补货创建人"><Inp value={creator} onChange={setCreator} placeholder="请输入补货创建人" className="w-32" /></FField>
+          <FField label="关联仓库"><Inp value={relWarehouse} onChange={setRelWarehouse} placeholder="请输入关联仓库" className="w-32" /></FField>
+          <FField label="补货批次">
+            <Sel value={batchF} onChange={setBatchF} className="w-28">{["全部", "第一批次", "第二批次", "第三批次"].map(v => <option key={v}>{v}</option>)}</Sel>
+          </FField>
+          <FField label="状态">
+            <Sel value={statusF} onChange={setStatusF} className="w-28">{["全部", "待分车", "待分拣", "待配送", "分车中", "分拣中", "配送中", "履约完成", "履约失败", "已取消"].map(v => <option key={v}>{v}</option>)}</Sel>
+          </FField>
+          <FField label="系统自动补单">
+            <Sel value={isAutoF} onChange={setIsAutoF} className="w-28">{["全部", "是", "否"].map(v => <option key={v}>{v}</option>)}</Sel>
+          </FField>
+          <FField label="创建时间">
+            <div className="flex items-center gap-1"><input type="date" value={createFrom} onChange={e => setCreateFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" value={createTo} onChange={e => setCreateTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
+          </FField>
+          <FField label="推送履约时间">
+            <div className="flex items-center gap-1"><input type="date" onChange={e => setPushFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" onChange={e => setPushTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
+          </FField>
+          <FField label="履约完成时间">
+            <div className="flex items-center gap-1"><input type="date" onChange={e => setDoneFrom(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /><span className="text-[#94A3B8]">—</span><input type="date" onChange={e => setDoneTo(e.target.value)} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-2 bg-white" /></div>
+          </FField>
+          <div className="flex gap-2 self-end">
+            <Btn v="primary" icon={I.search}>查询</Btn>
+            <Btn v="secondary" onClick={resetFilters}>重置</Btn>
+          </div>
         </div>
       </FilterBar>
       <Card>
@@ -1137,7 +1375,7 @@ function RestockOrderList({ onCreate, onDetail, onModify }: { onCreate: () => vo
           <table className="w-full min-w-[1600px]">
             <THead cols={["补货单号", "点位名称", "点位编码", "设备资产编码", "关联仓库", "标签", "系统自动补单", "补货批次", "商品品种", "补货总数", "最近补货时间", "创建时间", "状态", "分拣人", "分拣完成时间", "配送人", "履约完成时间", "操作"]} />
             <tbody>
-              {RESTOCK_ORDERS.map(r => (
+              {orders.map(r => (
                 <TR key={r.id}>
                   <TD><span className="text-[#2563EB] font-mono text-xs">{r.id}</span></TD>
                   <TD>{r.cabinetName}</TD>
@@ -1156,7 +1394,8 @@ function RestockOrderList({ onCreate, onDetail, onModify }: { onCreate: () => vo
                     <div className="flex gap-1">
                       <Btn v="ghost" onClick={onDetail} className="text-xs px-2 h-7">详情</Btn>
                       <Btn v="ghost" onClick={onModify} className="text-xs px-2 h-7">修改</Btn>
-                      <Btn v="ghost" onClick={() => { setReturnModal(r.id); setReturnReason(""); }} className="text-xs px-2 h-7 text-[#DC2626]">退单</Btn>
+                      {r.status.startsWith("待") && <Btn v="ghost" onClick={() => setPushModal(r.id)} className="text-xs px-2 h-7 text-[#2563EB]">推送履约</Btn>}
+                      {canReturn(r.status) && <Btn v="ghost" onClick={() => { setReturnModal(r.id); setReturnReason(""); }} className="text-xs px-2 h-7 text-[#DC2626]">退单</Btn>}
                     </div>
                   </StickyOp>
                 </TR>
@@ -1166,10 +1405,19 @@ function RestockOrderList({ onCreate, onDetail, onModify }: { onCreate: () => vo
         </div>
         <Pagination page={page} total={80} onChange={setPage} />
       </Card>
-      <Modal open={!!returnModal} onClose={() => { setReturnModal(null); setReturnReason(""); }} title="退单" footer={<><Btn v="secondary" onClick={() => { setReturnModal(null); setReturnReason(""); }}>取消</Btn><Btn v="danger" disabled={!returnReason.trim()} onClick={() => { setReturnModal(null); setReturnReason(""); }}>确认退单</Btn></>}>
+      <Modal open={!!returnModal} onClose={() => { setReturnModal(null); setReturnReason(""); }} title="退单" footer={<><Btn v="secondary" onClick={() => { setReturnModal(null); setReturnReason(""); }}>取消</Btn><Btn v="danger" onClick={confirmReturn}>确认退单</Btn></>}>
         <div className="space-y-3">
           <div><div className="text-xs text-[#64748B] mb-1">补货单号</div><div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B] font-mono">{returnModal}</div></div>
-          <div><div className="text-xs text-[#64748B] mb-1">退单原因 <span className="text-[#DC2626]">*</span></div><textarea value={returnReason} onChange={e => setReturnReason(e.target.value.slice(0, 200))} maxLength={200} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20" placeholder="请输入退单原因..." /><div className="text-right text-xs text-[#94A3B8]">{returnReason.length}/200</div></div>
+          <div><div className="text-xs text-[#64748B] mb-1">退单原因 <span className="text-[10px] text-[#94A3B8]">（选填）</span></div><textarea value={returnReason} onChange={e => setReturnReason(e.target.value.slice(0, 200))} maxLength={200} className="w-full h-24 border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20" placeholder="请输入退单原因..." /><div className="text-right text-xs text-[#94A3B8]">{returnReason.length}/200</div></div>
+        </div>
+      </Modal>
+      <Modal open={!!pushModal} onClose={() => setPushModal(null)} title="推送履约" footer={<><Btn v="secondary" onClick={() => setPushModal(null)}>取消</Btn><Btn v="primary" onClick={() => setPushModal(null)}>确认推送</Btn></>}>
+        <div className="space-y-3">
+          <div><div className="text-xs text-[#64748B] mb-1">补货单号</div><div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B] font-mono">{pushModal}</div></div>
+          <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-[#EFF6FF]">
+            <Icon d={I.info} size={14} className="text-[#2563EB] flex-shrink-0 mt-0.5" />
+            <span className="text-xs text-[#2563EB]">推送后补货单将进入履约流程（分车 → 分拣 → 配送），推送后不可再修改商品与数量。</span>
+          </div>
         </div>
       </Modal>
     </div>

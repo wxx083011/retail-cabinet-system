@@ -291,20 +291,25 @@ const LOCATIONS = ["深圳科技园 A 区-001", "深圳科技园 B 区-002", "�
 const WR_DAYS = ["周一","周二","周三","周四","周五","周六","周日"] as const;
 
 type WRDay = { enabled: boolean; orderTime: string; pushTime: string; threshold: string };
-type WarehouseRuleRow = { id: string; warehouse: string; days: WRDay[] };
+type WarehouseRuleRow = { id: string; warehouses: string[]; days: WRDay[] };
 
 const makeWRDays = (): WRDay[] =>
   WR_DAYS.map(() => ({ enabled: false, orderTime: "09:00", pushTime: "10:00", threshold: "" }));
 
 const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) => {
   const [rows, setRows] = useState<WarehouseRuleRow[]>([
-    { id: "1", warehouse: "", days: makeWRDays() },
+    { id: "1", warehouses: [], days: makeWRDays() },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
+  const [openSel, setOpenSel] = useState<string | null>(null);
+  const [selSearch, setSelSearch] = useState("");
+  const [uploadFiles, setUploadFiles] = useState<Record<string, string>>({});
 
-  const updateWarehouse = (id: string, val: string) =>
-    setRows(rs => rs.map(r => r.id === id ? { ...r, warehouse: val } : r));
+  const toggleWarehouse = (id: string, w: string) =>
+    setRows(rs => rs.map(r => r.id === id
+      ? { ...r, warehouses: r.warehouses.includes(w) ? r.warehouses.filter(x => x !== w) : [...r.warehouses, w] }
+      : r));
 
   const patchDay = (id: string, di: number, patch: Partial<WRDay>) =>
     setRows(rs => rs.map(r => r.id === id
@@ -317,7 +322,7 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
       : r));
 
   const addRow = () =>
-    setRows(rs => [...rs, { id: Date.now().toString(), warehouse: "", days: makeWRDays() }]);
+    setRows(rs => [...rs, { id: Date.now().toString(), warehouses: [], days: makeWRDays() }]);
 
   const removeRow = (id: string) =>
     setRows(rs => rs.filter(r => r.id !== id));
@@ -325,7 +330,7 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
   const validate = () => {
     const e: Record<string, string> = {};
     rows.forEach((r, i) => {
-      if (!r.warehouse) e[`${i}-warehouse`] = "请选择仓库";
+      if (r.warehouses.length === 0) e[`${i}-warehouse`] = "请选择仓库";
       if (!r.days.some(d => d.enabled)) e[`${i}-days`] = "请至少选择一天";
     });
     setErrors(e);
@@ -361,19 +366,84 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
             </div>
 
             <div className="px-5 py-4 space-y-4">
-              {/* Warehouse selector */}
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-[#374151] whitespace-nowrap">
+              {/* Warehouse selector：多选 + 批量上传 */}
+              <div className="flex items-start gap-3">
+                <label className="text-sm text-[#374151] whitespace-nowrap w-[68px] flex-shrink-0 pt-1.5">
                   <span className="text-[#DC2626] mr-0.5">*</span>仓库名称
                 </label>
-                <Sel
-                  value={row.warehouse}
-                  onChange={v => updateWarehouse(row.id, v)}
-                  className="w-72"
-                  options={[{ label: "请选择仓库", value: "" }, ...WAREHOUSES.map(w => ({ label: w, value: w }))]}
-                />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3">
+                    {/* 多选下拉 */}
+                    <div className="relative w-72 flex-shrink-0">
+                      <button type="button"
+                        onClick={() => { setOpenSel(openSel === row.id ? null : row.id); setSelSearch(""); }}
+                        className={`w-full h-9 border rounded-lg px-3 text-sm flex items-center justify-between gap-2 bg-white transition-colors ${openSel === row.id ? "border-[#2563EB]" : "border-[#D1D5DB] hover:border-[#93C5FD]"}`}>
+                        <span className={`truncate ${row.warehouses.length ? "text-[#0F172A]" : "text-[#94A3B8]"}`}>
+                          {row.warehouses.length === 0 ? "请选择仓库（可多选）"
+                            : row.warehouses.length === 1 ? row.warehouses[0]
+                            : `已选 ${row.warehouses.length} 个仓库`}
+                        </span>
+                        <Icon d={IC.chevDown} size={14} className="text-[#94A3B8] flex-shrink-0" />
+                      </button>
+                      {openSel === row.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setOpenSel(null)} />
+                          <div className="absolute left-0 top-full mt-1 z-20 w-full border border-[#E2E8F0] rounded-lg bg-white shadow-lg overflow-hidden">
+                            <div className="p-2 border-b border-[#F1F5F9]">
+                              <input value={selSearch} onChange={e => setSelSearch(e.target.value)}
+                                placeholder="搜索仓库名称…"
+                                className="w-full h-7 text-sm px-2.5 border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#2563EB]" />
+                            </div>
+                            <div className="max-h-36 overflow-y-auto">
+                              {WAREHOUSES.filter(w => w.includes(selSearch)).map(w => (
+                                <label key={w} className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-[#F8FAFC] transition-colors ${row.warehouses.includes(w) ? "bg-[#EFF6FF]" : ""}`}>
+                                  <input type="checkbox" checked={row.warehouses.includes(w)} onChange={() => toggleWarehouse(row.id, w)} className="accent-[#2563EB]" />
+                                  <span className="text-sm text-[#334155]">{w}</span>
+                                </label>
+                              ))}
+                              {WAREHOUSES.filter(w => w.includes(selSearch)).length === 0 && (
+                                <div className="px-3 py-3 text-xs text-[#94A3B8] text-center">无匹配仓库</div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {/* 批量上传 */}
+                    {uploadFiles[row.id] ? (
+                      <div className="flex items-center gap-2 h-9 px-3 border border-[#E2E8F0] rounded-lg bg-[#F8FAFC] max-w-[240px]">
+                        <Icon d={IC.file} size={14} className="text-[#2563EB] flex-shrink-0" />
+                        <span className="text-xs text-[#334155] truncate">{uploadFiles[row.id]}</span>
+                        <button onClick={() => setUploadFiles(u => { const n = { ...u }; delete n[row.id]; return n; })}
+                          className="text-[#94A3B8] hover:text-[#EF4444] transition-colors">
+                          <Icon d={IC.x} size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-1.5 h-9 px-3 flex-shrink-0 border border-dashed border-[#CBD5E1] rounded-lg cursor-pointer hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-all group">
+                        <Icon d={IC.upload} size={14} className="text-[#94A3B8] group-hover:text-[#2563EB]" />
+                        <span className="text-xs text-[#94A3B8] group-hover:text-[#2563EB]">批量上传</span>
+                        <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
+                          onChange={e => { if (e.target.files?.[0]) setUploadFiles(u => ({ ...u, [row.id]: e.target.files![0].name })); }} />
+                      </label>
+                    )}
+                  </div>
+                  {/* 已选标签 */}
+                  {row.warehouses.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.warehouses.map(w => (
+                        <span key={w} className="inline-flex items-center gap-1 text-xs bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] rounded-full px-2.5 py-0.5">
+                          {w}
+                          <button onClick={() => toggleWarehouse(row.id, w)} className="hover:text-[#1D4ED8]">
+                            <Icon d={IC.x} size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {errors[`${idx}-warehouse`] && <p className="text-xs text-[#DC2626]">{errors[`${idx}-warehouse`]}</p>}
+                </div>
               </div>
-              {errors[`${idx}-warehouse`] && <p className="text-xs text-[#DC2626] -mt-2">{errors[`${idx}-warehouse`]}</p>}
 
               {/* Day table */}
               <div className="border border-[#E2E8F0] rounded-lg overflow-hidden text-sm">
@@ -470,18 +540,23 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
 };
 
 // ─── Location Rule Form ────────────────────────────────────────────────────────
-type LocationRuleRow = { id: string; location: string; days: WRDay[] };
+type LocationRuleRow = { id: string; locations: string[]; days: WRDay[] };
 
 const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) => {
   const [rows, setRows] = useState<LocationRuleRow[]>([
-    { id: "1", location: "", days: makeWRDays() },
+    { id: "1", locations: [], days: makeWRDays() },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const [importStep, setImportStep] = useState(false);
+  const [openSel, setOpenSel] = useState<string | null>(null);
+  const [selSearch, setSelSearch] = useState("");
+  const [uploadFiles, setUploadFiles] = useState<Record<string, string>>({});
 
-  const updateLocation = (id: string, val: string) =>
-    setRows(rs => rs.map(r => r.id === id ? { ...r, location: val } : r));
+  const toggleLocation = (id: string, l: string) =>
+    setRows(rs => rs.map(r => r.id === id
+      ? { ...r, locations: r.locations.includes(l) ? r.locations.filter(x => x !== l) : [...r.locations, l] }
+      : r));
 
   const patchDay = (id: string, di: number, patch: Partial<WRDay>) =>
     setRows(rs => rs.map(r => r.id === id
@@ -494,7 +569,7 @@ const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit
       : r));
 
   const addRow = () =>
-    setRows(rs => [...rs, { id: Date.now().toString(), location: "", days: makeWRDays() }]);
+    setRows(rs => [...rs, { id: Date.now().toString(), locations: [], days: makeWRDays() }]);
 
   const removeRow = (id: string) =>
     setRows(rs => rs.filter(r => r.id !== id));
@@ -502,7 +577,7 @@ const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit
   const validate = () => {
     const e: Record<string, string> = {};
     rows.forEach((r, i) => {
-      if (!r.location) e[`${i}-location`] = "请选择点位";
+      if (r.locations.length === 0) e[`${i}-location`] = "请选择点位";
       if (!r.days.some(d => d.enabled)) e[`${i}-days`] = "请至少选择一天";
     });
     setErrors(e);
@@ -532,19 +607,84 @@ const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit
             </div>
 
             <div className="px-5 py-4 space-y-4">
-              {/* Location selector */}
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-[#374151] whitespace-nowrap">
+              {/* Location selector：多选 + 批量上传 */}
+              <div className="flex items-start gap-3">
+                <label className="text-sm text-[#374151] whitespace-nowrap w-[68px] flex-shrink-0 pt-1.5">
                   <span className="text-[#DC2626] mr-0.5">*</span>点位名称
                 </label>
-                <Sel
-                  value={row.location}
-                  onChange={v => updateLocation(row.id, v)}
-                  className="w-72"
-                  options={[{ label: "请选择点位", value: "" }, ...LOCATIONS.map(l => ({ label: l, value: l }))]}
-                />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3">
+                    {/* 多选下拉 */}
+                    <div className="relative w-72 flex-shrink-0">
+                      <button type="button"
+                        onClick={() => { setOpenSel(openSel === row.id ? null : row.id); setSelSearch(""); }}
+                        className={`w-full h-9 border rounded-lg px-3 text-sm flex items-center justify-between gap-2 bg-white transition-colors ${openSel === row.id ? "border-[#2563EB]" : "border-[#D1D5DB] hover:border-[#93C5FD]"}`}>
+                        <span className={`truncate ${row.locations.length ? "text-[#0F172A]" : "text-[#94A3B8]"}`}>
+                          {row.locations.length === 0 ? "请选择点位（可多选）"
+                            : row.locations.length === 1 ? row.locations[0]
+                            : `已选 ${row.locations.length} 个点位`}
+                        </span>
+                        <Icon d={IC.chevDown} size={14} className="text-[#94A3B8] flex-shrink-0" />
+                      </button>
+                      {openSel === row.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setOpenSel(null)} />
+                          <div className="absolute left-0 top-full mt-1 z-20 w-full border border-[#E2E8F0] rounded-lg bg-white shadow-lg overflow-hidden">
+                            <div className="p-2 border-b border-[#F1F5F9]">
+                              <input value={selSearch} onChange={e => setSelSearch(e.target.value)}
+                                placeholder="搜索点位名称…"
+                                className="w-full h-7 text-sm px-2.5 border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#2563EB]" />
+                            </div>
+                            <div className="max-h-36 overflow-y-auto">
+                              {LOCATIONS.filter(l => l.includes(selSearch)).map(l => (
+                                <label key={l} className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-[#F8FAFC] transition-colors ${row.locations.includes(l) ? "bg-[#EFF6FF]" : ""}`}>
+                                  <input type="checkbox" checked={row.locations.includes(l)} onChange={() => toggleLocation(row.id, l)} className="accent-[#2563EB]" />
+                                  <span className="text-sm text-[#334155]">{l}</span>
+                                </label>
+                              ))}
+                              {LOCATIONS.filter(l => l.includes(selSearch)).length === 0 && (
+                                <div className="px-3 py-3 text-xs text-[#94A3B8] text-center">无匹配点位</div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {/* 批量上传 */}
+                    {uploadFiles[row.id] ? (
+                      <div className="flex items-center gap-2 h-9 px-3 border border-[#E2E8F0] rounded-lg bg-[#F8FAFC] max-w-[240px]">
+                        <Icon d={IC.file} size={14} className="text-[#2563EB] flex-shrink-0" />
+                        <span className="text-xs text-[#334155] truncate">{uploadFiles[row.id]}</span>
+                        <button onClick={() => setUploadFiles(u => { const n = { ...u }; delete n[row.id]; return n; })}
+                          className="text-[#94A3B8] hover:text-[#EF4444] transition-colors">
+                          <Icon d={IC.x} size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex items-center gap-1.5 h-9 px-3 flex-shrink-0 border border-dashed border-[#CBD5E1] rounded-lg cursor-pointer hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-all group">
+                        <Icon d={IC.upload} size={14} className="text-[#94A3B8] group-hover:text-[#2563EB]" />
+                        <span className="text-xs text-[#94A3B8] group-hover:text-[#2563EB]">批量上传</span>
+                        <input type="file" accept=".xlsx,.xls,.csv" className="hidden"
+                          onChange={e => { if (e.target.files?.[0]) setUploadFiles(u => ({ ...u, [row.id]: e.target.files![0].name })); }} />
+                      </label>
+                    )}
+                  </div>
+                  {/* 已选标签 */}
+                  {row.locations.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.locations.map(l => (
+                        <span key={l} className="inline-flex items-center gap-1 text-xs bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] rounded-full px-2.5 py-0.5">
+                          {l}
+                          <button onClick={() => toggleLocation(row.id, l)} className="hover:text-[#1D4ED8]">
+                            <Icon d={IC.x} size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {errors[`${idx}-location`] && <p className="text-xs text-[#DC2626]">{errors[`${idx}-location`]}</p>}
+                </div>
               </div>
-              {errors[`${idx}-location`] && <p className="text-xs text-[#DC2626] -mt-2">{errors[`${idx}-location`]}</p>}
 
               {/* Day table */}
               <div className="border border-[#E2E8F0] rounded-lg overflow-hidden text-sm">

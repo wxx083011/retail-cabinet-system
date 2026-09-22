@@ -1186,6 +1186,7 @@ const PickingList = ({ onDetail, onBack, tab, onTabChange }: {
                 {/* Fields */}
                 {([
                   ["关联补货单号", o.replenishNo],
+                  ["点位编码", o.siteCode],
                   ["点位名称", o.siteName],
                   ["批次号", o.ffBatch],
                   ["创建时间", o.createdAt],
@@ -3196,7 +3197,7 @@ const InstallSubmit = ({ orderId, onBack, onSuccess }: {
                 <KV label="地址" value={order.addr} />
                 <KV label="设备型号" value={order.model} />
                 <KV label="安装数量" value={`${order.qty} 台`} accent />
-                <KV label="截止时间" value={order.deadline} />
+                <KV label="截止时间" value={order.demandDate} />
                 <KV label="现场联系" value={order.contact} />
               </div>
             </Card>

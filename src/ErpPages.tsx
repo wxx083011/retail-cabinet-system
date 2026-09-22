@@ -459,6 +459,7 @@ const PRODS = [
     preStoreQty: 3500,
     whStockQty: 12400,
     avgDailySales15d: 345,
+    availDays: 36,
     publishTime: "2024-01-15 10:00",
     hasAlgoLaunch: true,
   },
@@ -484,6 +485,7 @@ const PRODS = [
     preStoreQty: 5200,
     whStockQty: 28000,
     avgDailySales15d: 520,
+    availDays: 54,
     publishTime: "2024-01-18 14:30",
     hasAlgoLaunch: true,
   },
@@ -506,6 +508,7 @@ const PRODS = [
     preStoreQty: 1800,
     whStockQty: 6500,
     avgDailySales15d: 198,
+    availDays: 33,
     publishTime: "2024-02-01 09:15",
     hasAlgoLaunch: false,
   },
@@ -531,6 +534,7 @@ const PRODS = [
     preStoreQty: 950,
     whStockQty: 3200,
     avgDailySales15d: 86,
+    availDays: 37,
     publishTime: "2024-02-20 11:00",
     hasAlgoLaunch: false,
   },
@@ -556,6 +560,7 @@ const PRODS = [
     preStoreQty: 2400,
     whStockQty: 9800,
     avgDailySales15d: 260,
+    availDays: 38,
     publishTime: "2024-03-05 16:20",
     hasAlgoLaunch: true,
   },
@@ -578,6 +583,7 @@ const PRODS = [
     preStoreQty: 0,
     whStockQty: 1200,
     avgDailySales15d: 42,
+    availDays: 29,
     publishTime: "2024-03-12 08:45",
     hasAlgoLaunch: false,
   },
@@ -603,6 +609,7 @@ const PRODS = [
     preStoreQty: 2100,
     whStockQty: 7400,
     avgDailySales15d: 215,
+    availDays: 34,
     publishTime: "2024-04-02 15:10",
     hasAlgoLaunch: true,
   },
@@ -625,9 +632,19 @@ const PRODS = [
     preStoreQty: 3800,
     whStockQty: 15200,
     avgDailySales15d: 380,
+    availDays: 40,
     publishTime: "2024-04-10 13:00",
     hasAlgoLaunch: true,
   },
+];
+
+// 库存分布情况弹窗展示数据（写死）
+const STOCK_DIST = [
+  { wh: "深圳中心仓", total: 4200, avail: 3800, frozen: 400 },
+  { wh: "广州南沙仓", total: 3100, avail: 2600, frozen: 500 },
+  { wh: "北京顺义仓", total: 2400, avail: 2400, frozen: 0 },
+  { wh: "上海浦东仓", total: 1800, avail: 1500, frozen: 300 },
+  { wh: "成都天府仓", total: 900, avail: 700, frozen: 200 },
 ];
 
 const SUPPLIERS = [
@@ -1260,6 +1277,7 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
   // Modal / Action states
   const [previewImg, setPreviewImg] = useState<{ url: string; title: string; barcode: string; spec: string } | null>(null);
   const [detailProduct, setDetailProduct] = useState<(typeof PRODS)[0] | null>(null);
+  const [stockDistProduct, setStockDistProduct] = useState<(typeof PRODS)[0] | null>(null);
   const [confirmStatusItem, setConfirmStatusItem] = useState<(typeof PRODS)[0] | null>(null);
   const [algoLaunchItem, setAlgoLaunchItem] = useState<(typeof PRODS)[0] | null>(null);
   const [algoLaunchPageProduct, setAlgoLaunchPageProduct] = useState<(typeof PRODS)[0] | null>(null);
@@ -1567,8 +1585,9 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
                 <th className="p-3 w-24 text-right whitespace-nowrap">总预存量</th>
                 <th className="p-3 w-28 text-right whitespace-nowrap">总仓库库存量</th>
                 <th className="p-3 w-28 text-right whitespace-nowrap">15日日均销量</th>
+                <th className="p-3 w-28 text-right whitespace-nowrap">库存可用天数</th>
                 <th className="p-3 w-36 whitespace-nowrap">发布时间</th>
-                <th className="p-3 w-44 sticky right-0 bg-[#F8FAFC] z-10 border-l border-[#E2E8F0] text-center whitespace-nowrap shadow-[-4px_0_8px_rgba(0,0,0,0.03)]">
+                <th className="p-3 w-80 sticky right-0 bg-[#F8FAFC] z-10 border-l border-[#E2E8F0] text-center whitespace-nowrap shadow-[-4px_0_8px_rgba(0,0,0,0.03)]">
                   操作项
                 </th>
               </tr>
@@ -1576,7 +1595,7 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
             <tbody className="divide-y divide-[#F1F5F9] text-[#334155]">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className="py-12 text-center text-[#94A3B8]">
+                  <td colSpan={22} className="py-12 text-center text-[#94A3B8]">
                     <Empty
                       icon="archive"
                       title="未找到匹配的商品档案"
@@ -1726,6 +1745,9 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
                       {/* 15日日均销量 */}
                       <td className="p-3 text-right font-bold text-[#D97706]">{p.avgDailySales15d}</td>
 
+                      {/* 库存可用天数 */}
+                      <td className="p-3 text-right font-semibold text-[#0F172A]">{p.availDays} 天</td>
+
                       {/* 发布时间 */}
                       <td className="p-3 text-[#64748B] text-[11px] whitespace-nowrap">{p.publishTime}</td>
 
@@ -1737,6 +1759,13 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
                             className="text-[#2563EB] hover:text-[#1D4ED8] hover:underline font-medium text-xs"
                           >
                             详情
+                          </button>
+                          <span className="text-[#CBD5E1]">|</span>
+                          <button
+                            onClick={() => setStockDistProduct(p)}
+                            className="text-[#0891B2] hover:text-[#0e7490] hover:underline font-medium text-xs"
+                          >
+                            库存分布
                           </button>
                           <span className="text-[#CBD5E1]">|</span>
                           <button
@@ -1781,6 +1810,63 @@ export const ProductArchiveList = ({ onEdit }: { onEdit: (id?: string) => void }
         </div>
         <Pager total={filteredProducts.length} page={1} pageSize={10} />
       </div>
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* MODAL 0: 库存分布情况 Modal */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {stockDistProduct && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setStockDistProduct(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-[#0F172A]">库存分布情况</h3>
+                <p className="text-xs text-[#64748B] mt-1">
+                  {stockDistProduct.name} | 条码: {stockDistProduct.barcode} | 规格: {stockDistProduct.spec}
+                </p>
+              </div>
+              <button
+                onClick={() => setStockDistProduct(null)}
+                className="text-[#94A3B8] hover:text-[#334155] p-1.5 rounded-full hover:bg-[#F1F5F9]"
+              >
+                <Ic d={P.x} size={20} />
+              </button>
+            </div>
+            <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-left text-[11px] font-semibold text-[#64748B]">
+                    <th className="px-4 py-2.5 whitespace-nowrap">仓库名称</th>
+                    <th className="px-4 py-2.5 whitespace-nowrap text-right">商品总库存</th>
+                    <th className="px-4 py-2.5 whitespace-nowrap text-right">商品可用库存</th>
+                    <th className="px-4 py-2.5 whitespace-nowrap text-right">商品冻结库存</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F1F5F9] text-[#334155]">
+                  {STOCK_DIST.map(s => (
+                    <tr key={s.wh} className="hover:bg-[#F8FAFC] transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-[#0F172A] whitespace-nowrap">{s.wh}</td>
+                      <td className="px-4 py-2.5 text-right font-semibold">{s.total.toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-right text-[#16A34A] font-semibold">{s.avail.toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-right text-[#D97706] font-semibold">{s.frozen.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-[#F8FAFC] border-t border-[#E2E8F0] font-semibold text-[#0F172A]">
+                    <td className="px-4 py-2.5">合计</td>
+                    <td className="px-4 py-2.5 text-right">12,400</td>
+                    <td className="px-4 py-2.5 text-right text-[#16A34A]">11,000</td>
+                    <td className="px-4 py-2.5 text-right text-[#D97706]">1,400</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Btn variant="secondary" size="sm" onClick={() => setStockDistProduct(null)}>关闭</Btn>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* MODAL 1: 主图放大预览 Modal */}
@@ -2206,11 +2292,11 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
   const [boxSize, setBoxSize] = useState(isEdit ? "24" : "");
   const [netWeight, setNetWeight] = useState(isEdit ? "330" : "");
   const [shelfLifeNum, setShelfLifeNumber] = useState(isEdit ? "180" : "");
-  const [shelfLifeUnit, setShelfLifeUnit] = useState<"天" | "月">("天");
   const [storageCondition, setStorageCondition] = useState(isEdit ? "常温" : "常温");
 
   // Field States - Group 2: 采购信息
   const [costPrice, setCostPrice] = useState(isEdit ? "2.20" : "");
+  const [boxCostPrice, setBoxCostPrice] = useState(isEdit ? "52.80" : "");
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>(
     isEdit ? ["S001", "S002"] : ["S001"]
   );
@@ -2249,8 +2335,7 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
   // Compute Risk Level from Shelf Life
   const calculateRiskLevel = () => {
     if (!shelfLifeNum || isNaN(Number(shelfLifeNum))) return { label: "未知风险", color: "gray" as BC };
-    let days = Number(shelfLifeNum);
-    if (shelfLifeUnit === "月") days *= 30;
+    const days = Number(shelfLifeNum);
 
     if (days <= 30) {
       return { label: "高风险 (短效期/易变质品)", color: "red" as BC };
@@ -2362,7 +2447,7 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
         <div className="px-5 py-3.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />
-            <h2 className="text-sm font-bold text-[#0F172A]">分组一：基本信息</h2>
+            <h2 className="text-sm font-bold text-[#0F172A]">基本信息</h2>
           </div>
           <span className="text-xs text-[#64748B]">商品基础主数据唯一身份与物理规格属性</span>
         </div>
@@ -2673,21 +2758,14 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
               <div className="flex gap-2">
                 <input
                   type="number"
-                  placeholder="正整数"
+                  placeholder="正整数（天）"
                   value={shelfLifeNum}
                   onChange={(e) => setShelfLifeNumber(e.target.value)}
                   className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] ${
                     errors.shelfLife ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#CBD5E1]"
                   }`}
                 />
-                <select
-                  value={shelfLifeUnit}
-                  onChange={(e) => setShelfLifeUnit(e.target.value as "天" | "月")}
-                  className="w-20 px-2 py-2 border border-[#CBD5E1] rounded-lg bg-white"
-                >
-                  <option value="天">天</option>
-                  <option value="月">月</option>
-                </select>
+                <span className="w-20 px-2 py-2 border border-[#CBD5E1] rounded-lg bg-[#F1F5F9] text-[#64748B] text-center select-none">天</span>
               </div>
               {errors.shelfLife && <p className="text-[11px] text-[#DC2626] mt-0.5">{errors.shelfLife}</p>}
             </div>
@@ -2725,17 +2803,17 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
         <div className="px-5 py-3.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-[#16A34A]" />
-            <h2 className="text-sm font-bold text-[#0F172A]">分组二：采购信息</h2>
+            <h2 className="text-sm font-bold text-[#0F172A]">采购信息</h2>
           </div>
           <span className="text-xs text-[#64748B]">供应商采购合作条约与成本核算参数</span>
         </div>
 
         <div className="p-5 space-y-4 text-xs">
-          {/* Row 1: 成本价, 供应商多选 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Row 1: 成本价, 单箱成本价, 供应商多选 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block font-semibold text-[#334155] mb-1">
-                成本价 (元) <span className="text-[#DC2626]">*</span>
+                单件成本价 (元) <span className="text-[#DC2626]">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-[#94A3B8] font-bold">¥</span>
@@ -2751,6 +2829,23 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
                 />
               </div>
               {errors.costPrice && <p className="text-[11px] text-[#DC2626] mt-0.5">{errors.costPrice}</p>}
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#334155] mb-1">
+                单箱成本价 (元) <span className="text-[#94A3B8] font-normal">(选填)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-[#94A3B8] font-bold">¥</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={boxCostPrice}
+                  onChange={(e) => setBoxCostPrice(e.target.value)}
+                  className="w-full pl-7 pr-3 py-2 border border-[#CBD5E1] font-bold text-[#0F172A] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                />
+              </div>
             </div>
 
             <div className="md:col-span-2">
@@ -2830,7 +2925,7 @@ export const ProductArchiveForm = ({ onBack, isEdit = false }: { onBack: () => v
         <div className="px-5 py-3.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-[#7C3AED]" />
-            <h2 className="text-sm font-bold text-[#0F172A]">分组三：商品运营信息</h2>
+            <h2 className="text-sm font-bold text-[#0F172A]">商品运营信息</h2>
           </div>
           <span className="text-xs text-[#64748B]">智能柜选品推荐等级与铺货目标预设</span>
         </div>
@@ -3626,10 +3721,7 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
     if (!bankName.trim()) errs.bankName = "开户行为必填项";
     else if (bankName.trim().length > 50) errs.bankName = "开户行最长 50 字符";
 
-    if (!contractFile) errs.contractFile = "请上传供应合同附件文件";
-
-    if (!remark.trim()) errs.remark = "备注为必填项";
-    else if (remark.trim().length > 200) errs.remark = "备注最长 200 字符";
+    if (remark.trim().length > 200) errs.remark = "备注最长 200 字符";
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -3884,8 +3976,8 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
           {/* Prominent Contract Upload Zone */}
           <div>
             <label className="block font-semibold text-[#334155] mb-1.5">
-              供应合同 <span className="text-[#DC2626]">*</span>{" "}
-              <span className="text-[#94A3B8] font-normal">(必填 · 需清晰展示合同文件名与文件状态)</span>
+              供应合同{" "}
+              <span className="text-[#94A3B8] font-normal">(选填 · 上传后需清晰展示合同文件名与文件状态)</span>
             </label>
 
             <div
@@ -3952,11 +4044,11 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
             {errors.contractFile && <p className="text-[11px] text-[#DC2626] mt-1">{errors.contractFile}</p>}
           </div>
 
-          {/* Row 2: 备注 (必填，最长200字) */}
+          {/* Row 2: 备注 (非必填，最长200字) */}
           <div className="pt-2 border-t border-[#F1F5F9]">
             <div className="flex items-center justify-between mb-1">
               <label className="font-semibold text-[#334155]">
-                备注 <span className="text-[#DC2626]">*</span>
+                备注 <span className="text-[11px] text-[#94A3B8] font-normal">(选填)</span>
               </label>
               <span className="text-[11px] text-[#94A3B8]">{remark.length} / 200字</span>
             </div>
@@ -4699,7 +4791,7 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
           <span className="text-xs text-[#94A3B8]">操作权限说明：</span>
           <span className="flex items-center gap-1.5 text-xs text-[#64748B]">
             <span className="w-4 h-4 rounded bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center"><Ic d={P.edit} size={9} className="text-[#2563EB]" /></span>
-            未入库可修改/删除
+            未入库可修改/取消
           </span>
           <span className="flex items-center gap-1.5 text-xs text-[#64748B]">
             <span className="w-4 h-4 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center"><Ic d={P.shield} size={9} className="text-[#94A3B8]" /></span>
@@ -4838,10 +4930,10 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
                         }
                         {canDelete(r)
                           ? <Btn variant="ghost" size="sm" className="!text-[#DC2626] hover:!bg-[#FEF2F2]" onClick={()=>setDeleteTarget(r)}>
-                              <Ic d={P.trash} size={12} />删除
+                              <Ic d={P.x} size={12} />取消
                             </Btn>
                           : <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#CBD5E1] cursor-not-allowed select-none">
-                              <Ic d={P.shield} size={11} className="text-[#CBD5E1]" />删除
+                              <Ic d={P.shield} size={11} className="text-[#CBD5E1]" />取消
                             </span>
                         }
                       </div>
@@ -4872,15 +4964,15 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setDeleteTarget(null)} />
           <div className="relative bg-white rounded-xl shadow-xl border border-[#E2E8F0] w-[440px]">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-              <h2 className="text-base font-semibold text-[#0F172A]">确认删除采购单</h2>
+              <h2 className="text-base font-semibold text-[#0F172A]">确认取消采购单</h2>
               <button onClick={()=>setDeleteTarget(null)} className="text-[#94A3B8] hover:text-[#334155]"><Ic d={P.x} size={18} /></button>
             </div>
             <div className="px-5 py-4">
               <div className="flex items-start gap-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-3 mb-3">
                 <Ic d={P.alertTri} size={17} className="text-[#DC2626] mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-[#991B1B] leading-6">
-                  <p>确认删除采购单 <strong className="font-mono">{deleteTarget.id}</strong> 吗？</p>
-                  <p className="text-xs text-[#B91C1C] mt-1">删除后数据不可恢复，该操作仅在未发生入库操作时可执行。</p>
+                  <p>确认取消采购单 <strong className="font-mono">{deleteTarget.id}</strong> 吗？</p>
+                  <p className="text-xs text-[#B91C1C] mt-1">取消后采购单不可恢复，该操作仅在未发生入库操作时可执行。</p>
                 </div>
               </div>
               <div className="text-xs text-[#64748B] bg-[#F8FAFC] rounded-lg p-3 space-y-1">
@@ -4891,7 +4983,7 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
             </div>
             <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] rounded-b-xl">
               <Btn variant="secondary" onClick={()=>setDeleteTarget(null)}>取消</Btn>
-              <Btn variant="danger" onClick={()=>setDeleteTarget(null)}>确认删除</Btn>
+              <Btn variant="danger" onClick={()=>setDeleteTarget(null)}>确认取消</Btn>
             </div>
           </div>
         </div>

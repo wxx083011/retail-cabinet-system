@@ -748,6 +748,8 @@ const LOC_DATA = [
     scene: "写字楼",
     status: "启用",
     deviceStatus: "在线",
+    offlineAt: "",
+    offlineDays: "",
     auditStatus: "审核通过",
     created: "2023-08-01",
   },
@@ -762,6 +764,8 @@ const LOC_DATA = [
     scene: "运动",
     status: "启用",
     deviceStatus: "在线",
+    offlineAt: "",
+    offlineDays: "",
     auditStatus: "审核通过",
     created: "2023-09-20",
   },
@@ -776,6 +780,8 @@ const LOC_DATA = [
     scene: "写字楼",
     status: "启用",
     deviceStatus: "离线",
+    offlineAt: "09-20 11:05",
+    offlineDays: "已离线 2 天",
     auditStatus: "待审核",
     created: "2024-01-15",
   },
@@ -790,6 +796,8 @@ const LOC_DATA = [
     scene: "医院",
     status: "禁用",
     deviceStatus: "离线",
+    offlineAt: "09-12 18:40",
+    offlineDays: "已离线 10 天",
     auditStatus: "审核驳回",
     created: "2024-03-10",
   },
@@ -804,6 +812,8 @@ const LOC_DATA = [
     scene: "工厂",
     status: "启用",
     deviceStatus: "在线",
+    offlineAt: "",
+    offlineDays: "",
     auditStatus: "审核通过",
     created: "2024-06-20",
   },
@@ -818,6 +828,8 @@ const LOC_DATA = [
     scene: "学校",
     status: "启用",
     deviceStatus: "离线",
+    offlineAt: "09-21 08:15",
+    offlineDays: "已离线 1 天",
     auditStatus: "待审核",
     created: "2025-03-01",
   },
@@ -1034,9 +1046,16 @@ const LocationList = ({
                 </div>
                 <div className="text-xs text-[#94A3B8]">{loc.code}</div>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {deviceStatusTag(loc.deviceStatus)}
-                {locStatusTag(loc.status)}
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <div className="flex items-center gap-1.5">
+                  {deviceStatusTag(loc.deviceStatus)}
+                  {locStatusTag(loc.status)}
+                </div>
+                {loc.deviceStatus === "离线" && (
+                  <span className="text-[10px] text-[#94A3B8]">
+                    离线于 {loc.offlineAt} · {loc.offlineDays}
+                  </span>
+                )}
               </div>
             </div>
             {/* Row 2: customer */}
@@ -1289,7 +1308,7 @@ const LocationDetail = ({
   const auditState = AUDIT_STATES[auditIdx]
 
   type TabKey = "基本信息" | "商务合同" | "运营配置" | "关联装机工单" | "经营数据" | "审核状态"
-  const TABS: TabKey[] = ["基本信息", "商务合同", "运营配置", "关联装机工单", "经营数据", "审核状态"]
+  const TABS: TabKey[] = ["基本信息", "运营配置", "关联装机工单", "经营数据", "审核状态", "商务合同"]
   const [activeTab, setActiveTab] = useState<TabKey>("基本信息")
 
   const SKU_RANK = [
@@ -1367,28 +1386,7 @@ const LocationDetail = ({
           </>
         )}
 
-        {/* ── 商务合同 ── */}
-        {activeTab === "商务合同" && (
-          <>
-            <MC className="mt-3">
-              <MKV label="合同附件" value={
-                <button className="flex items-center gap-1 text-[#2563EB] text-sm font-medium">
-                  <Ic d={P.clip} size={13} />
-                  合同协议书_蜂巢北楼.pdf
-                </button>
-              } />
-            </MC>
-            <MSec title="联系人信息" />
-            <MC>
-              <MKV label="联系人姓名" value="张主任" />
-              <MKV label="联系电话" value={<span className="text-[#2563EB]">138-8888-0001</span>} />
-              <MKV label="联系人性别" value="男" />
-              <MKV label="联系人微信号" value="zhangzr_fc" />
-              <MKV label="联系人邮箱" value="zhang@fengchao.com" />
-              <MKV label="联系人身份" value="行政主管" />
-            </MC>
-          </>
-        )}
+      
 
         {/* ── 运营配置 ── */}
         {activeTab === "运营配置" && (
@@ -1409,15 +1407,29 @@ const LocationDetail = ({
             <MC className="mt-3">
               <MKV label="是否同步安装申请" value="是" />
               <MKV label="设备型号" value="智柜 Pro X8" />
+              <MKV label="设备安装位置" value="大堂东侧靠窗" />
+              <MKV label="需求安装时间" value="2025-09-15" />
+              <MKV label="是否定制外观" value="是" />
+              <MKV label="点位外观照片" value={
+                <div className="flex gap-1.5 justify-end">
+                  {["正面", "侧面"].map(t => (
+                    <div key={t} className="w-14 h-14 rounded-[8px] bg-[#F5F7FA] border border-[#E2E8F0] flex items-center justify-center">
+                      <span className="text-[10px] text-[#94A3B8]">{t}</span>
+                    </div>
+                  ))}
+                </div>
+              } />
+              <MKV label="是否需提前报备" value="是" />
+              <MKV label="是否有电梯" value="是" />
+              <MKV label="是否需户外棚" value="否" />
               <MKV label="设备资产条码" value="DEV-2025-0042" />
-              <MKV label="预计安装时间" value="2025-09-15" />
               <MKV label="实际安装时间" value="2025-09-15" />
               <MKV label="安装工程人员" value="王工" />
               <MKV label="工单审核状态" value={<Tag label="审核通过" color="green" />} />
               <MKV label="工单审核人" value="张主管" />
               <MKV label="工单创建时间" value="2025-09-10 09:30" />
               <MKV label="工单审核完成时间" value="2025-09-11 14:20" />
-              <MKV label="备注" value="需提前联系物业申请施工证" />
+              <MKV label="备注（其他要求）" value="需提前联系物业申请施工证" />
             </MC>
           </>
         )}
@@ -1479,7 +1491,28 @@ const LocationDetail = ({
             <AuditCard state={auditState} />
           </>
         )}
-
+        {/* ── 商务合同 ── */}
+        {activeTab === "商务合同" && (
+          <>
+            <MC className="mt-3">
+              <MKV label="合同附件" value={
+                <button className="flex items-center gap-1 text-[#2563EB] text-sm font-medium">
+                  <Ic d={P.clip} size={13} />
+                  合同协议书_蜂巢北楼.pdf
+                </button>
+              } />
+            </MC>
+            <MSec title="联系人信息" />
+            <MC>
+              <MKV label="联系人姓名" value="张主任" />
+              <MKV label="联系电话" value={<span className="text-[#2563EB]">138-8888-0001</span>} />
+              <MKV label="联系人性别" value="男" />
+              <MKV label="联系人微信号" value="zhangzr_fc" />
+              <MKV label="联系人邮箱" value="zhang@fengchao.com" />
+              <MKV label="联系人身份" value="行政主管" />
+            </MC>
+          </>
+        )}
       </div>
 
       {/* 重新发起 bottom bar — shown when audit is rejected */}
@@ -1555,6 +1588,11 @@ const NewLocation = ({
   const [rivalTrad, setRivalTrad] = useState("无")
   const [nearStore, setNearStore] = useState("无")
   const [syncVal, setSyncVal] = useState("否")
+  // 关联装机工单（选“是”后展开）
+  const [customLook, setCustomLook] = useState("否") // 是否定制外观，默认否
+  const [needReport, setNeedReport] = useState("") // 是否需提前报备，无默认
+  const [hasElevator, setHasElevator] = useState("") // 是否有电梯，无默认
+  const [needShed, setNeedShed] = useState("否") // 是否需户外棚，默认否
 
   return (
     <div className="h-full flex flex-col bg-[#F5F7FA]">
@@ -1759,19 +1797,63 @@ const NewLocation = ({
               </div>
               <MF label="设备型号" required>
                 <MSelect
-                  placeholder="请选择设备型号"
+                  placeholder="从设备型号字典选择"
                   options={["智柜 Pro X8", "智柜 Max X12", "智柜 Lite X4"]}
                 />
               </MF>
-              <MF label="预计安装时间" required>
+              <MF label="设备安装位置">
+                <MInput placeholder="如有指定安装位置请填写，如：大堂东侧靠窗" />
+              </MF>
+              <MF label="需求安装时间" required>
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] text-[#CBD5E1]">
-                    不早于今日，请选择日期
+                    不能早于今天，请选择日期
                   </span>
                   <Ic d={P.cal} size={14} className="text-[#CBD5E1]" />
                 </div>
               </MF>
-              <MF label="备注">
+              <MF label="是否定制外观" required>
+                <RadioGroup
+                  value={customLook}
+                  options={["是", "否"]}
+                  onChange={setCustomLook}
+                />
+              </MF>
+              {customLook === "是" && (
+                <MF label="点位外观照片" required>
+                  <div className="flex gap-2 mt-1">
+                    <div className="w-20 h-20 rounded-[8px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] flex flex-col items-center justify-center gap-1 text-[#94A3B8]">
+                      <Ic d={P.plus} size={18} />
+                      <span className="text-[10px]">上传</span>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-[#94A3B8] mt-1">
+                    用于定制外观参考，支持 JPG / PNG，最多 6 张
+                  </div>
+                </MF>
+              )}
+              <MF label="是否需提前报备" required>
+                <RadioGroup
+                  value={needReport}
+                  options={["是", "否"]}
+                  onChange={setNeedReport}
+                />
+              </MF>
+              <MF label="是否有电梯" required>
+                <RadioGroup
+                  value={hasElevator}
+                  options={["是", "否"]}
+                  onChange={setHasElevator}
+                />
+              </MF>
+              <MF label="是否需户外棚" required>
+                <RadioGroup
+                  value={needShed}
+                  options={["是", "否"]}
+                  onChange={setNeedShed}
+                />
+              </MF>
+              <MF label="备注（其他要求）">
                 <MInput placeholder="最长200字符" />
               </MF>
             </>

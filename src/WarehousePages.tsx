@@ -104,6 +104,43 @@ const Card = ({ children, className = "", noPad = false }: { children: ReactNode
   <div className={`bg-white border border-[#E2E8F0] rounded-xl shadow-sm ${noPad ? "" : "p-5"} ${className}`}>{children}</div>
 );
 
+// 下拉选择+搜索（用于筛选区）
+const SelSearch = ({ options, placeholder, className = "" }: { options: string[]; placeholder: string; className?: string }) => {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [val, setVal] = useState("");
+  const filtered = options.filter(o => o.includes(q));
+  return (
+    <div className={`relative ${className}`}>
+      <button type="button" onClick={() => { setOpen(o => !o); setQ(""); }}
+        className={`w-full h-9 border rounded-md text-sm px-3 pr-8 text-left bg-white transition-all ${open ? "border-[#16A34A] ring-2 ring-[#DCFCE7]" : "border-[#E2E8F0] hover:border-[#BBF7D0]"}`}>
+        <span className={val ? "text-[#0F172A]" : "text-[#94A3B8]"}>{val || placeholder}</span>
+      </button>
+      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none"><Ic d={P.chevD} size={14} /></span>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full mt-1 z-20 w-full border border-[#E2E8F0] rounded-lg bg-white shadow-lg overflow-hidden">
+            <div className="p-2 border-b border-[#F1F5F9]">
+              <input value={q} onChange={e => setQ(e.target.value)} placeholder="输入关键字搜索…" autoFocus
+                className="w-full h-7 text-sm px-2.5 border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#16A34A]" />
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {filtered.map(o => (
+                <button key={o} type="button" onClick={() => { setVal(o); setOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F8FAFC] transition-colors ${val === o ? "bg-[#F0FDF4] text-[#16A34A] font-medium" : "text-[#334155]"}`}>
+                  {o}
+                </button>
+              ))}
+              {filtered.length === 0 && <div className="px-3 py-3 text-xs text-[#94A3B8] text-center">无匹配结果</div>}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const FR = ({ label, required, hint, children, error }: {
   label: string; required?: boolean; hint?: string; children: ReactNode; error?: string;
 }) => (
@@ -207,6 +244,9 @@ const WH_LOCATIONS: Record<string, { code: string; name: string; address: string
   ],
   "5": [],
 };
+
+// 点位名称下拉选项（汇总各仓库关联点位）
+const ALL_LOC_NAMES = Array.from(new Set(Object.values(WH_LOCATIONS).flat().map(l => l.name)));
 
 export const WarehouseList = ({ onCreate, onEdit }: { onCreate: () => void; onEdit: () => void }) => {
   const [rows, setRows] = useState<WhRow[]>(WH_DATA);
@@ -1000,6 +1040,14 @@ export const WarehouseInvList = ({ onDetail, onAdjust }: { onDetail: () => void;
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-[#64748B]">城市</label>
             <Sel className="w-32" options={[{label:"全部城市",value:""},...NUM_CITIES.map(c=>({label:c,value:c}))]} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-[#64748B]">点位编码</label>
+            <Inp placeholder="模糊搜索点位编码" icon="search" className="w-40" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-[#64748B]">点位名称</label>
+            <SelSearch options={ALL_LOC_NAMES} placeholder="下拉选择或搜索点位" className="w-44" />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-[#64748B]">关联点位名称/编码</label>

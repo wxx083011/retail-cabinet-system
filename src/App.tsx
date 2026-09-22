@@ -559,19 +559,19 @@ const OPS_NAV: NavGroup[] = [
   ]},
   { label: "规则配置", items: [
     { key: "rule-auto", label: "自动补货规则配置", icon: "rules" },
-    { key: "rule-template", label: "预存量模板", icon: "layers" },
+    // { key: "rule-template", label: "预存量模板", icon: "layers" }, // 暂时隐藏，页面与路由保留
   ]},
   { label: "销售订单管理", items: [
     { key: "retail-order-list",  label: "零售订单列表",   icon: "order"   },
     { key: "retail-refund-list", label: "订单退款处理",   icon: "refresh" },
-    { key: "retail-algo-list",   label: "算法异常单处理", icon: "alert"   },
+    // { key: "retail-algo-list",   label: "算法异常单处理", icon: "alert"   }, // 暂时隐藏，页面与路由保留
   ]},
 ];
 
 const ERP_NAV: NavGroup[] = [
   { label: "商品档案", items: [
     { key: "erp-product-list", label: "商品档案", icon: "package" },
-    { key: "erp-price-list", label: "价格模板", icon: "tag" },
+    // { key: "erp-price-list", label: "价格模板", icon: "tag" }, // 暂时隐藏，页面与路由保留
   ]},
   { label: "供应商", items: [
     { key: "erp-supplier-list", label: "供应商管理", icon: "customers" },
@@ -1588,8 +1588,8 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
   const [city, setCity] = useState("sz");
   const [district, setDistrict] = useState("ns");
   const [address, setAddress] = useState("深圳市南山区科技园南区 A3 栋一楼大堂入口处");
-  const [lng, setLng] = useState("114.0579");
-  const [lat, setLat] = useState("22.5431");
+  const [lng, setLng] = useState("114.052628");
+  const [lat, setLat] = useState("22.540155");
   const [coverage, setCoverage] = useState("800");
   const [scene1, setScene1] = useState("写字楼");
   const [scene2, setScene2] = useState("");
@@ -1722,10 +1722,31 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
               {errors.address && <p className={errCls}>{errors.address}</p>}
             </div>
 
-            {/* 7. 经纬度 */}
+            {/* 7. 经纬度 · 地图选点 */}
             <div className="col-span-2">
-              <Lbl required hint="可点击地图选点，自动回填坐标及反填地址">经纬度</Lbl>
-              <div className="flex items-center gap-3">
+              <Lbl required hint="点击地图上的位置选择坐标，自动回填经纬度并反填地址">经纬度</Lbl>
+              <div className="relative h-44 rounded-lg border border-[#E2E8F0] overflow-hidden bg-[#E8EEF0] cursor-crosshair group"
+                onClick={() => { setLng("114.052628"); setLat("22.540155"); setAddress("深圳市南山区科技园南区深南大道 9668 号 A3 栋 1F"); }}>
+                <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 176">
+                  <rect width="800" height="176" fill="#E8EEF0" />
+                  <rect x="60" y="14" width="150" height="56" rx="4" fill="#DCE9DC" />
+                  <rect x="590" y="88" width="170" height="66" rx="4" fill="#DCE9DC" />
+                  <rect x="350" y="110" width="120" height="46" rx="4" fill="#E3E8E4" />
+                  <path d="M0 44 H800 M0 105 H800 M120 0 V176 M330 0 V176 M560 0 V176 M720 0 V176" stroke="#FFFFFF" strokeWidth="9" fill="none" />
+                  <path d="M0 140 Q 200 120 420 145 T 800 130" stroke="#C7DCE8" strokeWidth="14" fill="none" opacity="0.8" />
+                </svg>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none">
+                  <Icon d={Icons.location} size={30} className="text-[#2563EB] drop-shadow-md" />
+                </div>
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 rounded-md px-2.5 py-1 shadow-sm pointer-events-none">
+                  <Icon d={Icons.location} size={12} className="text-[#2563EB]" />
+                  <span className="font-mono text-xs text-[#64748B]">{lng || "—"}, {lat || "—"}</span>
+                </div>
+                <div className="absolute top-2 right-2 flex items-center gap-1 text-xs text-[#2563EB] bg-white/95 rounded-md px-2.5 py-1 shadow-sm group-hover:ring-2 ring-[#2563EB]/30 transition-all pointer-events-none">
+                  <Icon d={Icons.location} size={12} />点击地图选择位置
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-2 flex-1 border border-[#E2E8F0] rounded-lg px-3 h-9 bg-white focus-within:border-[#2563EB] transition-colors">
                   <span className="text-xs text-[#94A3B8] whitespace-nowrap">经度</span>
                   <input value={lng} onChange={e => setLng(e.target.value)} placeholder="如：114.0579"
@@ -1736,7 +1757,6 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
                   <input value={lat} onChange={e => setLat(e.target.value)} placeholder="如：22.5431"
                     className="flex-1 text-sm font-mono text-[#334155] focus:outline-none bg-transparent" />
                 </div>
-                <Btn variant="secondary" size="sm">从地图选择</Btn>
               </div>
               {errors.latlng && <p className={errCls}>{errors.latlng}</p>}
             </div>
@@ -2391,23 +2411,32 @@ const RestockRuleModal = ({ onClose }: { onClose: () => void }) => {
             <span className="text-xs font-medium text-[#374151]">{selLabel}</span>
           </div>
           <div className="flex-1">
-            <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
-              {options.map(opt => {
-                const active = rule.selections.includes(opt);
-                return (
-                  <button key={opt} onClick={() => toggleSel(rule.id, opt)}
-                    className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded border transition-all ${
-                      active
-                        ? "bg-[#EFF6FF] text-[#2563EB] border-[#93C5FD] font-medium"
-                        : "bg-white text-[#6B7280] border-[#E2E8F0] hover:border-[#93C5FD] hover:text-[#2563EB]"}`}>
-                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] flex-shrink-0" />}
-                    {opt}
-                  </button>
-                );
-              })}
-              {rule.selections.length === 0 && (
-                <span className="text-xs text-[#9CA3AF] italic">{selPlaceholder}</span>
-              )}
+            <div className="flex items-start gap-3">
+              <div className="flex-1 flex flex-wrap gap-1.5 min-h-[32px] items-center">
+                {options.map(opt => {
+                  const active = rule.selections.includes(opt);
+                  return (
+                    <button key={opt} onClick={() => toggleSel(rule.id, opt)}
+                      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded border transition-all ${
+                        active
+                          ? "bg-[#EFF6FF] text-[#2563EB] border-[#93C5FD] font-medium"
+                          : "bg-white text-[#6B7280] border-[#E2E8F0] hover:border-[#93C5FD] hover:text-[#2563EB]"}`}>
+                      {active && <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] flex-shrink-0" />}
+                      {opt}
+                    </button>
+                  );
+                })}
+                {rule.selections.length === 0 && (
+                  <span className="text-xs text-[#9CA3AF] italic">{selPlaceholder}</span>
+                )}
+              </div>
+              {/* 批量上传：与暂停规则弹窗同款 */}
+              <label className="flex items-center gap-1.5 h-8 px-3 flex-shrink-0 border border-dashed border-[#CBD5E1] rounded-lg cursor-pointer hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-all group">
+                <Icon d={Icons.upload} size={14} className="text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
+                <span className="text-xs text-[#9CA3AF] group-hover:text-[#2563EB] transition-colors">批量上传</span>
+                <span className="text-[10px] text-[#9CA3AF] group-hover:text-[#2563EB]">.xlsx / .csv</span>
+                <input type="file" accept=".xlsx,.csv" className="hidden" />
+              </label>
             </div>
             {rule.selections.length === 0 && (
               <p className="text-xs text-[#EF4444] mt-1">请至少选择一个{selLabel}</p>
@@ -2557,15 +2586,24 @@ const RestockRuleModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 // ─── Location Detail ──────────────────────────────────────────────────────────
-type LocTab = "点位信息" | "商务/合同信息" | "联系人信息" | "设备信息" | "设备云信息" | "运营配置" | "工单记录" | "经营数据";
-const LOC_TABS: LocTab[] = ["点位信息", "商务/合同信息", "联系人信息", "设备信息", "设备云信息", "运营配置", "工单记录", "经营数据"];
+type LocTab = "点位信息" | "联系人信息" | "设备信息" | "设备云信息" | "运营配置" | "工单记录" | "经营数据" | "补货记录" | "商务/合同信息" ;
+const LOC_TABS: LocTab[] = ["点位信息", "联系人信息", "设备信息", "设备云信息", "运营配置", "工单记录", "经营数据", "补货记录", "商务/合同信息"];
 
 const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => void }) => {
   const [tab, setTab] = useState<LocTab>("点位信息");
-  const [autoRestock, setAutoRestock] = useState(true);
-  const [ruleModalOpen, setRuleModalOpen] = useState(false);
-  const [pauseModalOpen, setPauseModalOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [woDetail, setWoDetail] = useState<number | null>(null);
+  const [restockDetail, setRestockDetail] = useState<number | null>(null);
+  // 补货设置（只读展示：enabled=false 的日期不显示）
+  const READONLY_RESTOCK_DAYS = [
+    { day: "周一", enabled: true,  time: "09:00", threshold: "20" },
+    { day: "周二", enabled: true,  time: "09:00", threshold: "20" },
+    { day: "周三", enabled: true,  time: "09:00", threshold: "20" },
+    { day: "周四", enabled: true,  time: "09:00", threshold: "20" },
+    { day: "周五", enabled: true,  time: "09:00", threshold: "20" },
+    { day: "周六", enabled: false, time: "09:00", threshold: "20" },
+    { day: "周日", enabled: false, time: "09:00", threshold: "20" },
+  ];
 
   const YN = ({ yes }: { yes: boolean }) => (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${yes ? "bg-[#F0FDF4] text-[#16A34A]" : "bg-[#F3F4F6] text-[#6B7280]"}`}>{yes ? "是" : "否"}</span>
@@ -2578,13 +2616,23 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
   );
 
   const RESTOCK_ROWS = [
-    { id: "RO-2025-0301-001", batch: "第1批", creator: "张运营", executor: "李补货", time: "2025-03-01 10:00", qty: 48, done: "2025-03-01 14:30", status: "已完成" },
-    { id: "RO-2025-0210-003", batch: "第1批", creator: "王主管", executor: "陈补货", time: "2025-02-10 09:30", qty: 36, done: "2025-02-10 13:00", status: "已完成" },
-    { id: "RO-2025-0118-002", batch: "第2批", creator: "张运营", executor: "—",      time: "2025-01-18 08:00", qty: 24, done: "—",               status: "待履约" },
+    { id: "RO-2025-0301-001", batch: "第1批", creator: "张运营", executor: "李补货", time: "2025-03-01 10:00", qty: 48, done: "2025-03-01 14:30", status: "已完成", lines: [
+      { name: "农夫山泉 550ml", spec: "550ml", layer: "第1层", qty: 18 },
+      { name: "东方树叶 500ml", spec: "500ml", layer: "第2层", qty: 12 },
+      { name: "乐事薯片 75g", spec: "75g", layer: "第3层", qty: 18 },
+    ] },
+    { id: "RO-2025-0210-003", batch: "第1批", creator: "王主管", executor: "陈补货", time: "2025-02-10 09:30", qty: 36, done: "2025-02-10 13:00", status: "已完成", lines: [
+      { name: "元气森林苏打水", spec: "480ml", layer: "第1层", qty: 16 },
+      { name: "百岁山矿泉水", spec: "570ml", layer: "第2层", qty: 20 },
+    ] },
+    { id: "RO-2025-0118-002", batch: "第2批", creator: "张运营", executor: "—",      time: "2025-01-18 08:00", qty: 24, done: "—",               status: "待履约", lines: [
+      { name: "统一冰红茶 500ml", spec: "500ml", layer: "第2层", qty: 24 },
+    ] },
   ];
   const WO_ROWS = [
-    { model: "智柜 Pro X8", code: "RC-2024-SZ-001", planTime: "2024-03-01 09:00", actualTime: "2024-03-01 14:00", engineer: "刘工", auditStatus: "审核通过", submitter: "张主管", auditor: "王审核", createTime: "2024-02-28 16:00", auditTime: "2024-03-02 10:00", remark: "安装位置：大堂入口左侧" },
-    { model: "智柜 Pro X8", code: "RC-2024-SZ-002", planTime: "2024-09-28 10:00", actualTime: "—",               engineer: "—",   auditStatus: "待审核",   submitter: "李运营", auditor: "—",    createTime: "2024-09-26 14:30", auditTime: "—",               remark: "" },
+    { model: "智柜 Pro X8", code: "RC-2024-SZ-001", installPos: "大堂入口左侧，正对电梯口", planTime: "2024-03-01 09:00", customLook: "是", report: "是", elevator: "是", shed: "否", actualTime: "2024-03-01 14:00", engineer: "刘工", auditStatus: "审核通过", submitter: "张主管", auditor: "王审核", createTime: "2024-02-28 16:00", auditTime: "2024-03-02 10:00", remark: "需提前联系物业申请施工证" },
+    { model: "智柜 Pro X8", code: "RC-2024-SZ-002", installPos: "员工休息区入口右侧", planTime: "2024-09-28 10:00", customLook: "否", report: "否", elevator: "是", shed: "否", actualTime: "—",               engineer: "—",   auditStatus: "待审核",   submitter: "李运营", auditor: "—",    createTime: "2024-09-26 14:30", auditTime: "—",               remark: "" },
+    { model: "智柜 Lite S4", code: "RC-2024-SZ-003", installPos: "—", planTime: "2024-09-01 09:00", customLook: "否", report: "是", elevator: "是", shed: "否", actualTime: "—",               engineer: "刘工", auditStatus: "待审核",   submitter: "王芳",   auditor: "—",    createTime: "2024-08-31 16:00", auditTime: "—",               remark: "" },
   ];
   const SALES_RANK = [
     { rank:1, name:"农夫山泉 550ml",    qty:312, amount:"¥624.00" },
@@ -2648,7 +2696,6 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
                 <Field label="点位名称"     value="深圳南山科技园 A3 栋大堂" />
                 <Field label="点位地区"     value="广东省 · 深圳市 · 南山区" />
                 <Field label="详细地址"     value="深圳市南山区科技园南区 A3 栋 1F" />
-                <Field label="经纬度"       value={<span className="font-mono text-xs text-[#64748B]">114.052628, 22.540155</span>} />
                 <Field label="覆盖人数"     value="约 1,200 人" />
                 <Field label="一级场景"     value="写字楼" />
                 <Field label="二级场景"     value="园区大堂" />
@@ -2658,6 +2705,30 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
                 <Field label="百米内便利店"   value={<YN yes={true} />} />
                 <div className="col-span-3">
                   <Field label="点位信息备注" value={<span className="text-[#64748B]">大堂空间宽敞，人流量大，建议增补 1 台设备。</span>} />
+                </div>
+              </div>
+              <div className="border-t border-[#F1F5F9] pt-5">
+                <div className="text-xs text-[#94A3B8] mb-2">经纬度 <span className="text-[#CBD5E1]">— 位置示意，只读</span></div>
+                <div className="relative h-40 rounded-lg border border-[#E2E8F0] overflow-hidden bg-[#E8EEF0]">
+                  {/* 假地图底图 */}
+                  <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 160">
+                    <rect width="800" height="160" fill="#E8EEF0" />
+                    <rect x="60" y="14" width="150" height="56" rx="4" fill="#DCE9DC" />
+                    <rect x="590" y="80" width="170" height="66" rx="4" fill="#DCE9DC" />
+                    <rect x="350" y="100" width="120" height="46" rx="4" fill="#E3E8E4" />
+                    <path d="M0 40 H800 M0 95 H800 M120 0 V160 M330 0 V160 M560 0 V160 M720 0 V160" stroke="#FFFFFF" strokeWidth="9" fill="none" />
+                    <path d="M0 128 Q 200 108 420 132 T 800 118" stroke="#C7DCE8" strokeWidth="14" fill="none" opacity="0.8" />
+                  </svg>
+                  {/* 定位标 */}
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
+                    <Icon d={Icons.location} size={30} className="text-[#2563EB] drop-shadow-md" />
+                  </div>
+                  {/* 坐标浮层 */}
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 rounded-md px-2.5 py-1 shadow-sm">
+                    <Icon d={Icons.location} size={12} className="text-[#2563EB]" />
+                    <span className="font-mono text-xs text-[#64748B]">114.052628, 22.540155</span>
+                  </div>
+                  <span className="absolute top-2 right-2 text-[10px] text-[#94A3B8] bg-white/85 rounded px-1.5 py-0.5">地图示意 · 只读</span>
                 </div>
               </div>
               <div className="border-t border-[#F1F5F9] pt-5">
@@ -2726,48 +2797,57 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
 
           {/* ── 设备云信息 ── */}
           {tab === "设备云信息" && (
-            <div className="max-w-xl">
-              <div className="rounded-xl bg-[#0F172A] px-6 py-5 mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-semibold text-white/70">在线状态</span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#16A34A]/20 text-[#4ADE80]">
-                    <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse" />在线
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-white/5 px-4 py-3">
-                    <div className="text-xs text-white/40 mb-1">实时温度</div>
-                    <div className="font-mono text-2xl font-bold text-[#4ADE80]">4.2°C</div>
-                    <div className="text-[10px] text-white/30 mt-1">上次更新 2 分钟前</div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "在线状态", value: <span className="inline-flex items-center justify-center w-full px-3 py-1.5 rounded-full text-xs font-semibold bg-[#DCFCE7] text-[#16A34A]">在线</span>, icon: Icons.wifi, ts: "2024-09-04 14:32:05" },
+                { label: "实时温度", value: <span className="text-2xl font-bold text-[#0F172A]">4.2°C</span>, icon: Icons.thermometer, ts: "2024-09-04 14:31:58" },
+                { label: "实时功率", value: <span className="text-2xl font-bold text-[#0F172A]">312W</span>, icon: Icons.zap, ts: "2024-09-04 14:32:01" },
+              ].map(c => (
+                <Card key={c.label} className="p-5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#64748B]">{c.label}</span>
+                    <Icon d={c.icon} size={20} className="text-[#94A3B8]" />
                   </div>
-                  <div className="rounded-xl bg-white/5 px-4 py-3">
-                    <div className="text-xs text-white/40 mb-1">实时功率</div>
-                    <div className="font-mono text-2xl font-bold text-[#60A5FA]">142W</div>
-                    <div className="text-[10px] text-white/30 mt-1">上次更新 2 分钟前</div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-[#94A3B8]">在线状态实时更新；温度与功率数据由云端周期刷新，存在约 2 分钟延迟。</p>
+                  {c.value}
+                  <div className="text-xs text-[#94A3B8]">云端更新于 {c.ts}</div>
+                </Card>
+              ))}
             </div>
           )}
-
           {/* ── 运营配置 ── */}
           {tab === "运营配置" && (
             <div>
-              <div className="flex items-center justify-between py-3 mb-5 border-b border-[#F1F5F9]">
-                <div>
-                  <div className="text-sm font-semibold text-[#0F172A]">自动补货单</div>
+              {/* 补货设置（只读展示，仅显示已勾选的适用日） */}
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-[#0F172A]">补货设置</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#94A3B8]">只读</span>
                 </div>
-                <Toggle checked={autoRestock} onChange={() => setAutoRestock(v => !v)} />
-              </div>
-              <div className={`transition-opacity ${autoRestock ? "" : "opacity-40 pointer-events-none"}`}>
-                <div className="flex items-center gap-3">
-                  <Btn variant="primary" onClick={() => setRuleModalOpen(true)}>配置自动补货规则</Btn>
-                  <Btn variant="secondary" onClick={() => setPauseModalOpen(true)}>配置暂停自动补货规则</Btn>
+                <p className="text-xs text-[#94A3B8] mb-3">该点位允许自动补货的时间范围及补货阈值</p>
+                <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+                  <div className="grid bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs font-medium text-[#6B7280]"
+                    style={{ gridTemplateColumns: "120px 1fr 200px" }}>
+                    <div className="px-4 py-2.5">适用日</div>
+                    <div className="px-4 py-2.5">允许补货时间</div>
+                    <div className="px-4 py-2.5">自动补货阈值（件）</div>
+                  </div>
+                  {READONLY_RESTOCK_DAYS.filter(d => d.enabled).map(d => (
+                    <div key={d.day} className="grid items-center border-b border-[#F1F5F9] last:border-0 bg-white"
+                      style={{ gridTemplateColumns: "120px 1fr 200px" }}>
+                      <div className="px-4 py-3 flex items-center gap-2">
+                        <Icon d={Icons.check} size={14} className="text-[#2563EB]" />
+                        <span className="text-sm font-medium text-[#0F172A]">{d.day}</span>
+                      </div>
+                      <div className="px-4 py-3 text-sm text-[#334155] flex items-center gap-1.5">
+                        <Icon d={Icons.clock} size={14} className="text-[#94A3B8]" />
+                        {d.time}
+                      </div>
+                      <div className="px-4 py-3 text-sm text-[#334155]">{d.threshold} <span className="text-xs text-[#94A3B8]">件</span></div>
+                    </div>
+                  ))}
                 </div>
+                <p className="text-xs text-[#CBD5E1] mt-2">未勾选的日期（{READONLY_RESTOCK_DAYS.filter(d => !d.enabled).map(d => d.day).join("、")}）不自动出单</p>
               </div>
-              {ruleModalOpen && <RestockRuleModal onClose={() => setRuleModalOpen(false)} />}
-              {pauseModalOpen && <PauseRestockModal onClose={() => setPauseModalOpen(false)} />}
             </div>
           )}
 
@@ -2778,45 +2858,105 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
                 <span className="text-sm font-medium text-[#0F172A]">装机工单列表</span>
                 <span className="text-xs text-[#94A3B8] bg-[#F1F5F9] px-2 py-0.5 rounded-full">一期仅展示装机工单</span>
               </div>
-              <div className="space-y-4">
-                {WO_ROWS.map((w, i) => (
-                  <div key={i} className="rounded-xl border border-[#E2E8F0] p-5">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                      {["设备型号","资产条码","预计安装时间","实际安装时间","安装工程人员","审核状态","提交人","审核人","创建时间","审核完成时间","备注","操作"].map(h => (
+                        <th key={h} className="py-2.5 px-3 text-left text-xs font-medium text-[#64748B]">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {WO_ROWS.map((w, i) => (
+                      <tr key={i} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC]">
+                        <td className="py-3 px-3 text-[#334155]">{w.model}</td>
+                        <td className="py-3 px-3 font-mono text-xs text-[#64748B]">{w.code}</td>
+                        <td className="py-3 px-3 text-[#334155]">{w.planTime.slice(0, 10)}</td>
+                        <td className="py-3 px-3 text-[#334155]">{w.actualTime === "—" ? "—" : w.actualTime.slice(0, 10)}</td>
+                        <td className="py-3 px-3 text-[#334155]">{w.engineer}</td>
+                        <td className="py-3 px-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                            ${w.auditStatus === "审核通过" ? "bg-[#F0FDF4] text-[#16A34A]" : w.auditStatus === "待审核" ? "bg-[#FFFBEB] text-[#D97706]" : "bg-[#FEF2F2] text-[#DC2626]"}`}>
+                            {w.auditStatus}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-[#334155]">{w.submitter}</td>
+                        <td className="py-3 px-3 text-[#334155]">{w.auditor}</td>
+                        <td className="py-3 px-3 text-xs text-[#64748B]">{w.createTime}</td>
+                        <td className="py-3 px-3 text-xs text-[#64748B]">{w.auditTime}</td>
+                        <td className="py-3 px-3 text-xs text-[#64748B]">{w.remark || "—"}</td>
+                        <td className="py-3 px-3">
+                          <button onClick={() => setWoDetail(i)} className="text-xs text-[#2563EB] hover:underline">详情</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 工单详情弹窗 */}
+              {woDetail !== null && (() => { const w = WO_ROWS[woDetail]; return (
+                <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center" onClick={() => setWoDetail(null)}>
+                  <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-[#0F172A]">装机工单详情</span>
                         <span className="font-mono text-xs font-semibold text-[#2563EB]">{w.code}</span>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                           ${w.auditStatus === "审核通过" ? "bg-[#F0FDF4] text-[#16A34A]" : w.auditStatus === "待审核" ? "bg-[#FFFBEB] text-[#D97706]" : "bg-[#FEF2F2] text-[#DC2626]"}`}>
                           {w.auditStatus}
                         </span>
                       </div>
-                      <span className="text-xs text-[#94A3B8]">创建于 {w.createTime}</span>
+                      <button onClick={() => setWoDetail(null)} className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center hover:bg-[#E2E8F0]">
+                        <Icon d={Icons.x} size={14} className="text-[#64748B]" />
+                      </button>
                     </div>
+                    <div className="text-xs text-[#94A3B8] mb-4">创建于 {w.createTime}</div>
                     <div className="grid grid-cols-3 gap-x-8 gap-y-4">
                       {[
-                        ["设备型号",       w.model],
-                        ["设备资产条码",   w.code],
-                        ["预计安装时间",   w.planTime],
-                        ["实际安装时间",   w.actualTime],
-                        ["安装工程人员",   w.engineer],
-                        ["工单提交人",     w.submitter],
-                        ["工单审核人",     w.auditor],
-                        ["工单审核完成时间", w.auditTime],
-                      ].map(([l, v]) => (
-                        <div key={l as string}>
-                          <div className="text-xs text-[#94A3B8] mb-1">{l}</div>
-                          <div className="text-sm text-[#334155]">{v}</div>
+                        { l: "设备型号",           v: <span>{w.model}</span> },
+                        { l: "设备安装位置",       v: <span>{w.installPos}</span> },
+                        { l: "需求安装时间",       v: <span>{w.planTime}</span> },
+                        { l: "是否定制外观",       v: <YN yes={w.customLook === "是"} /> },
+                        { l: "是否需提前报备",     v: <YN yes={w.report === "是"} /> },
+                        { l: "是否有电梯",         v: <YN yes={w.elevator === "是"} /> },
+                        { l: "是否需户外棚",       v: <YN yes={w.shed === "是"} /> },
+                        { l: "设备资产条码",       v: <span>{w.code}</span> },
+                        { l: "实际安装时间",       v: <span>{w.actualTime}</span> },
+                        { l: "安装工程人员",       v: <span>{w.engineer}</span> },
+                        { l: "工单提交人",         v: <span>{w.submitter}</span> },
+                        { l: "工单审核人",         v: <span>{w.auditor}</span> },
+                        { l: "工单创建时间",       v: <span>{w.createTime}</span> },
+                        { l: "工单审核完成时间",   v: <span>{w.auditTime}</span> },
+                      ].map(f => (
+                        <div key={f.l}>
+                          <div className="text-xs text-[#94A3B8] mb-1">{f.l}</div>
+                          <div className="text-sm text-[#334155]">{f.v}</div>
                         </div>
                       ))}
                     </div>
+                    {w.customLook === "是" && (
+                      <div className="mt-4">
+                        <div className="text-xs text-[#94A3B8] mb-2">点位外观照片</div>
+                        <div className="flex gap-2">
+                          {["正面", "侧面"].map(t => (
+                            <div key={t} className="w-14 h-14 rounded-lg bg-[#F5F7FA] border border-[#E2E8F0] flex items-center justify-center">
+                              <span className="text-[10px] text-[#94A3B8]">{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {w.remark && (
                       <div className="mt-4 pt-3 border-t border-[#F1F5F9]">
-                        <span className="text-xs text-[#94A3B8]">备注：</span>
+                        <span className="text-xs text-[#94A3B8]">备注（其他要求）：</span>
                         <span className="text-xs text-[#64748B]">{w.remark}</span>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ); })()}
             </div>
           )}
 
@@ -2870,17 +3010,23 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* ── 补货记录 ── */}
+          {tab === "补货记录" && (
+            <div>
               <SectionTitle title="补货记录" action={<span className="text-xs text-[#94A3B8]">默认展示最近 3 个月</span>} />
               <table className="w-full text-sm mt-3">
                 <thead>
                   <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                    {["补货单号","补货批次","创建人员","履约人员","补货时间","补货件数","履约完成时间","状态"].map(h => (
+                    {["补货单号","补货批次","创建人员","履约人员","补货时间","补货件数","履约完成时间","状态","操作"].map(h => (
                       <th key={h} className="py-2.5 px-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {RESTOCK_ROWS.map(r => (
+                  {RESTOCK_ROWS.map((r, i) => (
                     <tr key={r.id} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC]">
                       <td className="py-3 px-3 font-mono text-xs text-[#2563EB]">{r.id}</td>
                       <td className="py-3 px-3 text-[#334155]">{r.batch}</td>
@@ -2895,10 +3041,72 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
                           {r.status}
                         </span>
                       </td>
+                      <td className="py-3 px-3">
+                        <button onClick={() => setRestockDetail(i)} className="text-xs text-[#2563EB] hover:underline">详情</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {/* 补货单详情弹窗 */}
+              {restockDetail !== null && (() => { const r = RESTOCK_ROWS[restockDetail]; return (
+                <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center" onClick={() => setRestockDetail(null)}>
+                  <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-[#0F172A]">补货单详情</span>
+                        <span className="font-mono text-xs font-semibold text-[#2563EB]">{r.id}</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                          ${r.status==="已完成"?"bg-[#F0FDF4] text-[#16A34A]":"bg-[#FFFBEB] text-[#D97706]"}`}>
+                          {r.status}
+                        </span>
+                      </div>
+                      <button onClick={() => setRestockDetail(null)} className="w-7 h-7 rounded-full bg-[#F1F5F9] flex items-center justify-center hover:bg-[#E2E8F0]">
+                        <Icon d={Icons.x} size={14} className="text-[#64748B]" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+                      {[
+                        { l: "补货单号",       v: <span className="font-mono text-xs">{r.id}</span> },
+                        { l: "补货批次",       v: <span>{r.batch}</span> },
+                        { l: "补货件数",       v: <span className="font-medium text-[#0F172A]">{r.qty} 件</span> },
+                        { l: "创建人员",       v: <span>{r.creator}</span> },
+                        { l: "履约人员",       v: <span>{r.executor}</span> },
+                        { l: "补货时间",       v: <span>{r.time}</span> },
+                        { l: "履约完成时间", v: <span>{r.done}</span> },
+                      ].map(f => (
+                        <div key={f.l}>
+                          <div className="text-xs text-[#94A3B8] mb-1">{f.l}</div>
+                          <div className="text-sm text-[#334155]">{f.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-5">
+                      <div className="text-xs font-semibold text-[#64748B] mb-2">商品明细</div>
+                      <table className="w-full text-sm border border-[#F1F5F9] rounded-lg overflow-hidden">
+                        <thead>
+                          <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                            {["商品名称","规格","摆放层","补货数量"].map(h => (
+                              <th key={h} className="py-2 px-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {r.lines.map((ln, j) => (
+                            <tr key={j} className="border-b border-[#F1F5F9] last:border-0">
+                              <td className="py-2 px-3 text-[#334155]">{ln.name}</td>
+                              <td className="py-2 px-3 text-[#64748B]">{ln.spec}</td>
+                              <td className="py-2 px-3 text-[#64748B]">{ln.layer}</td>
+                              <td className="py-2 px-3 font-medium text-[#0F172A]">{ln.qty} 件</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ); })()}
             </div>
           )}
 
@@ -2911,12 +3119,12 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
 // ─── Device List ──────────────────────────────────────────────────────────────
 // ─── Device data ─────────────────────────────────────────────────────────────
 const DEVICE_ROWS = [
-  { id: "D001", code: "RC-2024-SZ-001", imei: "860123456789001", model: "智柜 Pro X8",  location: "蜂巢·科技园北楼1F-A区", customer: "蜂巢智能科技",   online: "在线", deploy: "投放", installed: "2024-03-01" },
-  { id: "D002", code: "RC-2024-SH-002", imei: "860123456789002", model: "智柜 Pro X8",  location: "上海虹桥天地 B1",       customer: "桔仔自动贩卖",   online: "在线", deploy: "投放", installed: "2024-04-12" },
-  { id: "D003", code: "RC-2024-BJ-003", imei: "860123456789003", model: "智柜 Lite S4", location: "—",                      customer: "格林购物科技",   online: "离线", deploy: "在库", installed: "—" },
-  { id: "D004", code: "RC-2024-CD-004", imei: "860123456789004", model: "智柜 Pro X8",  location: "成都天府软件园 D区食堂", customer: "云聚零售",       online: "在线", deploy: "投放", installed: "2024-06-20" },
-  { id: "D005", code: "RC-2024-HZ-005", imei: "860123456789005", model: "智柜 Max X12", location: "阿里西溪园区 5号楼",    customer: "万象智贩",       online: "在线", deploy: "投放", installed: "2024-07-08" },
-  { id: "D006", code: "RC-2024-GZ-006", imei: "860123456789006", model: "智柜 Lite S4", location: "—",                      customer: "盒里科技",       online: "离线", deploy: "在库", installed: "—" },
+  { id: "D001", code: "RC-2024-SZ-001", imei: "860123456789001", model: "智柜 Pro X8",  location: "蜂巢·科技园北楼1F-A区", customer: "蜂巢智能科技",   online: "在线", offlineAt: "—", deploy: "投放", installed: "2024-03-01" },
+  { id: "D002", code: "RC-2024-SH-002", imei: "860123456789002", model: "智柜 Pro X8",  location: "上海虹桥天地 B1",       customer: "桔仔自动贩卖",   online: "在线", offlineAt: "—", deploy: "投放", installed: "2024-04-12" },
+  { id: "D003", code: "RC-2024-BJ-003", imei: "860123456789003", model: "智柜 Lite S4", location: "—",                      customer: "格林购物科技",   online: "离线", offlineAt: "2025-09-20 18:42", deploy: "在库", installed: "—" },
+  { id: "D004", code: "RC-2024-CD-004", imei: "860123456789004", model: "智柜 Pro X8",  location: "成都天府软件园 D区食堂", customer: "云聚零售",       online: "在线", offlineAt: "2025-08-15 09:12", deploy: "投放", installed: "2024-06-20" },
+  { id: "D005", code: "RC-2024-HZ-005", imei: "860123456789005", model: "智柜 Max X12", location: "阿里西溪园区 5号楼",    customer: "万象智贩",       online: "在线", offlineAt: "—", deploy: "投放", installed: "2024-07-08" },
+  { id: "D006", code: "RC-2024-GZ-006", imei: "860123456789006", model: "智柜 Lite S4", location: "—",                      customer: "盒里科技",       online: "离线", offlineAt: "2025-09-21 07:30", deploy: "在库", installed: "—" },
 ];
 
 const DeviceList = ({ onDetail, onRemote }: { onDetail: () => void; onRemote: () => void }) => {
@@ -2977,7 +3185,7 @@ const DeviceList = ({ onDetail, onRemote }: { onDetail: () => void; onRemote: ()
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC]">
-                {["资产编码","IEMI","设备型号","关联点位名称","关联客户名称","在线状态","投放状态","安装日期","操作"].map(h => (
+                {["资产编码","IEMI","设备型号","关联点位名称","关联客户名称","在线状态","最近离线时间","投放状态","安装日期","操作"].map(h => (
                   <th key={h} className={`py-3 px-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap ${h === "操作" ? "sticky right-0 bg-[#F8FAFC] shadow-[-4px_0_8px_rgba(0,0,0,0.04)]" : ""}`}>{h}</th>
                 ))}
               </tr>
@@ -3003,6 +3211,9 @@ const DeviceList = ({ onDetail, onRemote }: { onDetail: () => void; onRemote: ()
                     {r.online === "在线"
                       ? <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-[#F0FDF4] text-[#16A34A]"><span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" />在线</span>
                       : <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-[#F3F4F6] text-[#6B7280]"><span className="w-1.5 h-1.5 rounded-full bg-[#6B7280]" />离线</span>}
+                  </td>
+                  <td className="py-3 px-3 text-xs text-[#64748B] whitespace-nowrap">
+                    {r.offlineAt === "—" ? <span className="text-[#94A3B8]">—</span> : r.offlineAt}
                   </td>
                   <td className="py-3 px-3">
                     {r.deploy === "投放"
@@ -4081,7 +4292,7 @@ const RetailOrderList = ({ onDetail }: { onDetail: (id: string) => void }) => {
     <div>
       <PageHeader title="零售订单列表"
         breadcrumbs={["首页","销售订单管理","零售订单列表"]}
-        actions={<Btn variant="secondary" icon="download" size="sm">导出</Btn>} />
+        actions={<div className="flex items-center gap-2"><Btn variant="secondary" icon="download" size="sm">导出</Btn><Btn variant="secondary" icon="download" size="sm">导出订单商品明细</Btn></div>} />
 
       <FilterBar>
         <FilterField label="订单号"><Input placeholder="订单号模糊搜索" icon="search" className="w-44" value={search} onChange={v => setSearch(v)} /></FilterField>
@@ -4464,6 +4675,14 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
   const [result, setResult] = useState("");
   const [opinion, setOpinion] = useState("");
   const isPending = refund.status === "待处理";
+  // 退款方式：部分金额退款 / 商品退款 / 整单退款
+  const [refundType, setRefundType] = useState(refund.refundAmount === refund.orderAmount ? "整单退款" : "部分金额退款");
+  const [checkedSkus, setCheckedSkus] = useState<number[]>([]);
+  const [manualAmount, setManualAmount] = useState("");
+  const selectedTotal = RETAIL_SKUS.filter((_, i) => checkedSkus.includes(i)).reduce((a, s) => a + s.price * s.qty, 0);
+  const amountValue = refundType === "整单退款" ? refund.orderAmount.toFixed(2)
+    : refundType === "商品退款" ? selectedTotal.toFixed(2)
+    : manualAmount;
 
   return (
     <div>
@@ -4471,15 +4690,41 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
         breadcrumbs={["首页","销售订单管理","订单退款处理", isPending?"退款处理":"退款详情"]}
         actions={<Btn variant="secondary" onClick={onBack}>返回列表</Btn>} />
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 space-y-4">
+      <div className="space-y-4">
           {/* 退款信息 */}
           <Card>
             <SectionTitle title="退款信息" />
+
+            {/* 订单视频展示：两个识别预览占位，默认不播放 */}
+            <div className="mb-4">
+              <div className="text-xs text-[#94A3B8] mb-1.5">订单视频展示</div>
+              <div className="grid grid-cols-2 gap-3">
+                {["开门视频", "取货视频"].map((t, i) => (
+                  <div key={t} className="relative rounded-lg bg-[#0F172A] h-44 flex items-center justify-center overflow-hidden">
+                    {/* 手绘取景框占位 */}
+                    <svg viewBox="0 0 200 100" className="absolute inset-0 w-full h-full opacity-25" preserveAspectRatio="xMidYMid slice">
+                      <rect x="70" y="18" width="60" height="64" rx="4" fill="none" stroke="#94A3B8" strokeWidth="2"/>
+                      <line x1="70" y1="38" x2="130" y2="38" stroke="#94A3B8" strokeWidth="1.5"/>
+                      <line x1="70" y1="58" x2="130" y2="58" stroke="#94A3B8" strokeWidth="1.5"/>
+                      <rect x="76" y="22" width="10" height="14" fill="#38BDF8" opacity="0.6"/>
+                      <rect x="90" y="22" width="10" height="14" fill="#38BDF8" opacity="0.4"/>
+                      <rect x="76" y="42" width="10" height="14" fill="#38BDF8" opacity="0.5"/>
+                      <rect x="104" y="62" width="10" height="14" fill="#38BDF8" opacity="0.4"/>
+                    </svg>
+                    <div className="w-11 h-11 rounded-full bg-white/90 shadow-lg flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 ml-0.5" fill="#0F172A"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                    <span className="absolute top-2 left-2 text-[10px] text-white/80 bg-black/50 px-2 py-1 rounded">{t}</span>
+                    <span className="absolute bottom-2 left-2 text-[10px] text-white/80 bg-black/50 px-2 py-1 rounded">订单识别预览 · 默认不播放视频</span>
+                    <span className="absolute top-2 right-2 text-[10px] text-white/80 bg-black/50 px-2 py-1 rounded font-mono">CAM-{refund.orderId.slice(-4)}{i === 0 ? "-A" : "-B"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <InfoGrid cols={2} items={[
               {label:"退款单号", value:<span className="font-mono text-xs font-bold text-[#2563EB]">{refund.refundNo}</span>},
               {label:"订单号",   value:<span className="font-mono text-xs text-[#7C3AED]">{refund.orderId}</span>},
-              {label:"退款金额", value:<span className="font-bold text-[#EF4444] text-base">¥{refund.refundAmount.toFixed(2)}</span>},
               {label:"退款原因", value:refund.reason},
               {label:"申请时间", value:refund.applyTime},
               {label:"订单金额", value:<span className="font-bold text-[#0F172A]">¥{refund.orderAmount.toFixed(2)}</span>},
@@ -4521,12 +4766,10 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
               </table>
             </div>
           </Card>
-        </div>
 
-        {/* 处理区 */}
-        <div className="col-span-1">
-          <Card className="sticky top-0">
-            <SectionTitle title="处理区" />
+          {/* 处理：位于商品明细下方 */}
+          <Card>
+            <SectionTitle title="处理" />
             {!isPending ? (
               <div className="space-y-3">
                 <div className="px-3 py-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
@@ -4537,31 +4780,82 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
               </div>
             ) : (
               <div className="space-y-4">
-                <FormRow label="处理结果" required>
+                {/* 处理结果 */}
+                <FormRow label="处理结果" required hint="下拉选择">
                   <Select value={result} onChange={v=>setResult(v)} className="w-full"
-                    options={[{label:"请选择处理结果",value:""},{label:"同意退款",value:"同意"},{label:"拒绝退款",value:"拒绝"}]} />
+                    options={[{label:"请选择处理结果",value:""},{label:"同意退款",value:"同意退款"},{label:"拒绝退款",value:"拒绝退款"}]} />
                 </FormRow>
-                {result === "拒绝" && (
+                {result === "拒绝退款" && (
                   <AlertBanner type="warning" msg="拒绝退款后，用户将收到通知，请在处理意见中说明原因。" />
                 )}
-                {result === "同意" && (
+                {result === "同意退款" && (
                   <AlertBanner type="success" msg={`确认同意后将原路退款 ¥${refund.refundAmount.toFixed(2)} 至用户账户。`} />
                 )}
-                <FormRow label="处理意见">
+
+                {/* 退款方式 */}
+                <FormRow label="退款方式" required hint="部分金额退款 / 商品退款 / 整单退款">
+                  <RadioGroup options={["部分金额退款", "商品退款", "整单退款"]} value={refundType} onChange={setRefundType} />
+                </FormRow>
+
+                {/* 选择退款商品：仅商品退款时展示，支持多选 */}
+                {refundType === "商品退款" && (
+                  <FormRow label="选择退款商品" required hint="可多选">
+                    <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                            <th className="px-3 py-2 w-8"></th>
+                            {["商品名称","数量","金额小计"].map(h=>(
+                              <th key={h} className="px-3 py-2 text-[11px] font-semibold text-[#64748B] whitespace-nowrap text-left">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {RETAIL_SKUS.map((s,i)=>(
+                            <tr key={i} className={`border-b border-[#F1F5F9] last:border-0 cursor-pointer ${checkedSkus.includes(i)?"bg-[#EFF6FF]":"hover:bg-[#F8FAFC]"}`} onClick={()=>setCheckedSkus(p=>p.includes(i)?p.filter(j=>j!==i):[...p,i])}>
+                              <td className="px-3 py-2"><input type="checkbox" checked={checkedSkus.includes(i)} readOnly className="rounded accent-[#2563EB] pointer-events-none" /></td>
+                              <td className="px-3 py-2 font-medium text-[#0F172A]">{s.name}</td>
+                              <td className="px-3 py-2 text-center">{s.qty}</td>
+                              <td className="px-3 py-2 font-bold text-[#0F172A]">¥{(s.price*s.qty).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </FormRow>
+                )}
+
+                {/* 退款金额 */}
+                <FormRow label="退款金额" required>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-[#EF4444]">¥</span>
+                    <input
+                      value={amountValue}
+                      onChange={e => setManualAmount(e.target.value.replace(/[^\d.]/g, "").slice(0, 10))}
+                      disabled={refundType !== "部分金额退款"}
+                      placeholder={refundType === "部分金额退款" ? "请输入退款金额" : ""}
+                      className={`flex-1 h-9 border border-[#E2E8F0] rounded-md text-sm px-3 font-medium ${refundType !== "部分金额退款" ? "bg-[#F8FAFC] text-[#64748B] cursor-not-allowed" : "bg-white text-[#0F172A] focus:outline-none focus:border-[#2563EB]"}`} />
+                  </div>
+                  <div className="text-[11px] text-[#94A3B8] mt-1">
+                    {refundType === "整单退款" ? "全额退款，自动回填本订单交易金额，不可修改" : refundType === "商品退款" ? "根据勾选商品自动回填交易金额，不可修改" : "部分金额退款需手动填写"}
+                  </div>
+                </FormRow>
+
+                <FormRow label="处理意见" hint="多行文本，最长 200 字">
                   <textarea value={opinion} onChange={e=>setOpinion(e.target.value.slice(0,200))} rows={5}
                     placeholder="请填写处理意见（最长 200 字）"
                     className="w-full border border-[#E2E8F0] rounded-md text-sm px-3 py-2 resize-none focus:outline-none focus:border-[#2563EB]"/>
                   <div className="text-right text-xs text-[#94A3B8] mt-1">{opinion.length}/200</div>
                 </FormRow>
-                <Btn variant={result==="同意"?"primary":result==="拒绝"?"danger":"secondary"}
-                  className="w-full justify-center" disabled={!result}
-                  onClick={onBack}>
-                  {result ? `确认${result}退款` : "请先选择处理结果"}
-                </Btn>
+                <div className="flex justify-end gap-2 pt-1">
+                  <Btn variant="secondary" onClick={onBack}>取消</Btn>
+                  <Btn variant={result==="同意退款"?"primary":result==="拒绝退款"?"danger":"secondary"} disabled={!result} onClick={onBack}>
+                    提交处理结果
+                  </Btn>
+                </div>
               </div>
             )}
           </Card>
-        </div>
       </div>
     </div>
   );
@@ -4608,9 +4902,9 @@ const ReturnModal = ({ open, onClose }: { open: boolean; onClose: () => void }) 
 // ─── Rule Auto ────────────────────────────────────────────────────────────────
 const RuleAuto = () => {
   const [rules, setRules] = useState([
-    { id: "R001", name: "华南区日常自动补货规则", scope: "全部点位", trigger: "库存低于预存量 30%", freq: "每日 07:00", priority: 1, enabled: true },
-    { id: "R002", name: "北京紧急补货触发规则", scope: "北京客户", trigger: "库存低于预存量 15%", freq: "实时触发", priority: 2, enabled: true },
-    { id: "R003", name: "周末补货加量规则", scope: "商业综合体", trigger: "周五 18:00 定时", freq: "每周五", priority: 3, enabled: false },
+    { id: "R001", name: "华南区日常自动补货规则", scope: "全部点位", trigger: "库存低于预存量 30%", minStock: 5, freq: "每日 07:00", priority: 1, enabled: true },
+    { id: "R002", name: "北京紧急补货触发规则", scope: "北京客户", trigger: "库存低于预存量 15%", minStock: 3, freq: "实时触发", priority: 2, enabled: true },
+    { id: "R003", name: "周末补货加量规则", scope: "商业综合体", trigger: "周五 18:00 定时", minStock: 8, freq: "每周五", priority: 3, enabled: false },
   ]);
   return (
     <div>
@@ -4636,6 +4930,7 @@ const RuleAuto = () => {
                   <div className="flex flex-wrap gap-4 text-sm text-[#64748B]">
                     <span>适用范围：<strong className="text-[#334155]">{r.scope}</strong></span>
                     <span>触发条件：<strong className="text-[#334155]">{r.trigger}</strong></span>
+                    <span>最低缺货件数阈值：<strong className="text-[#334155]">{r.minStock} 件</strong></span>
                     <span>执行频率：<strong className="text-[#334155]">{r.freq}</strong></span>
                     <span>优先级：<strong className="text-[#2563EB]">P{r.priority}</strong></span>
                   </div>
@@ -4803,7 +5098,7 @@ export default function App() {
       case "product-restock": return <RestockPage onBack={() => setActivePage("product-list")} />;
       case "order-list": return <OrderList onModify={() => setActivePage("order-modify")} onReturn={() => setReturnOpen(true)} />;
       case "goods-cabinet-list": return <SmartCabinetList onDetail={() => setActivePage("goods-cabinet-detail")} onInventory={() => setActivePage("goods-inventory")} onRestock={() => setActivePage("goods-restock-create")} />;
-      case "goods-cabinet-detail": return <SmartCabinetDetail onBack={() => setActivePage("goods-cabinet-list")} onInventory={() => setActivePage("goods-inventory")} />;
+      case "goods-cabinet-detail": return <SmartCabinetDetail onBack={() => setActivePage("goods-cabinet-list")} onInventory={() => setActivePage("goods-inventory")} onEditLocation={() => setActivePage("location-edit")} />;
       case "goods-inventory": return <InventoryManagement onBack={() => setActivePage("goods-cabinet-list")} onListProduct={() => setActivePage("goods-list-product")} onRestock={() => setActivePage("goods-restock-create")} />;
       case "goods-list-product": return <ListProductsPage onBack={() => setActivePage("goods-inventory")} onInventory={() => setActivePage("goods-inventory")} onRestock={() => setActivePage("goods-restock-create")} />;
       case "goods-restock-create": return <CreateRestockPage onBack={() => setActivePage("goods-inventory")} />;

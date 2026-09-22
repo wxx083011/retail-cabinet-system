@@ -559,6 +559,36 @@ const MAP_PTS = [
   { id: "P25", x: 352, y: 268, name: "盐田港", status: "已完成", urgency: "普通" },
 ];
 
+// 师傅点位分布（静态演示数据，坐标与 MAP_PTS 同一 580×340 画布）
+type TripStop = { x: number; y: number; name: string; status: "已配送" | "配送中" | "待配送" };
+const TRIP_STOPS: Record<string, TripStop[]> = {
+  "BC-20260916-001": [ // 王师傅 4 点
+    { x: 145, y: 185, name: "科技园北", status: "已配送" },
+    { x: 295, y: 178, name: "深房广场", status: "已配送" },
+    { x: 332, y: 218, name: "皇庭广场", status: "配送中" },
+    { x: 448, y: 192, name: "万象城", status: "待配送" },
+  ],
+  "BC-20260916-002": [ // 张师傅 3 点
+    { x: 128, y: 220, name: "南山商业", status: "已配送" },
+    { x: 278, y: 210, name: "华强北", status: "配送中" },
+    { x: 465, y: 215, name: "解放路", status: "待配送" },
+  ],
+  "BC-20260915-001": [ // 陈师傅 5 点
+    { x: 155, y: 248, name: "海岸城", status: "已配送" },
+    { x: 248, y: 108, name: "民治大道", status: "已配送" },
+    { x: 268, y: 125, name: "东方广场", status: "配送中" },
+    { x: 305, y: 235, name: "福田保税", status: "待配送" },
+    { x: 440, y: 230, name: "国贸商圈", status: "待配送" },
+  ],
+  "BC-20260915-002": [ // 刘师傅 4 点
+    { x: 105, y: 148, name: "宝安中心", status: "已配送" },
+    { x: 188, y: 88, name: "光明新城", status: "配送中" },
+    { x: 315, y: 196, name: "中心区A", status: "待配送" },
+    { x: 475, y: 240, name: "东门步行街", status: "待配送" },
+  ],
+};
+const TRIP_STOP_COLOR: Record<TripStop["status"], string> = { "已配送": "#16A34A", "配送中": "#2563EB", "待配送": "#F97316" };
+
 const WORKORDERS = [
   { id: "WO-20250910-001", type: "新机装机", customer: "蜂巢智能科技（深圳总部）", location: "南山区科技园北区北楼1F", device: "智柜 Pro X8 × 2台", assignee: "师傅-李国强", phone: "138-1234-5678", status: "安装中", priority: "高", created: "09-10 08:00", appt: "09-10 14:00", eta: "09-10 17:00" },
   { id: "WO-20250910-002", type: "新机装机", customer: "格林购物（天利中央广场）", location: "南山区天利中央广场B3-12", device: "智柜 Max X12 × 1台", assignee: "师傅-张卫东", phone: "139-5678-1234", status: "已分配", priority: "普通", created: "09-10 08:30", appt: "09-10 16:00", eta: "09-10 18:00" },
@@ -1146,14 +1176,15 @@ export const OutboundDetail = ({ onBack }: { onBack: () => void }) => {
 type DlRow = {
   id:string; replenishNo:string; replenishCount:number; demandQty:number;
   driver:string; vehicle:string; status:string;
+  progressDone:number; progressTotal:number;
   createdAt:string; startedAt:string; completedAt:string;
 };
 const DL_ROWS: DlRow[] = [
-  {id:"DL-20250910-001",replenishNo:"REP-20250910-003",replenishCount:5,demandQty:360,driver:"王大志",vehicle:"粤B 88888",status:"履约完成",createdAt:"2025-09-10 08:30",startedAt:"2025-09-10 09:00",completedAt:"2025-09-10 14:30"},
-  {id:"DL-20250910-002",replenishNo:"REP-20250910-004",replenishCount:4,demandQty:240,driver:"张建国",vehicle:"粤B 77777",status:"配送中",createdAt:"2025-09-10 08:00",startedAt:"2025-09-10 09:30",completedAt:"—"},
-  {id:"DL-20250910-003",replenishNo:"REP-20250910-005",replenishCount:6,demandQty:180,driver:"陈师傅",vehicle:"粤B 55555",status:"待配送",createdAt:"2025-09-10 09:00",startedAt:"—",completedAt:"—"},
-  {id:"DL-20250909-008",replenishNo:"REP-20250909-008",replenishCount:3,demandQty:480,driver:"刘广远",vehicle:"沪A 66666",status:"履约完成",createdAt:"2025-09-09 06:00",startedAt:"2025-09-09 07:00",completedAt:"2025-09-09 12:00"},
-  {id:"DL-20250910-004",replenishNo:"REP-20250910-006",replenishCount:2,demandQty:98,driver:"王配送",vehicle:"川A 5521B",status:"履约失败",createdAt:"2025-09-10 09:15",startedAt:"2025-09-10 09:15",completedAt:"—"},
+  {id:"DL-20250910-001",replenishNo:"REP-20250910-003",replenishCount:5,demandQty:360,driver:"王大志",vehicle:"粤B 88888",status:"履约完成",progressDone:5,progressTotal:5,createdAt:"2025-09-10 08:30",startedAt:"2025-09-10 09:00",completedAt:"2025-09-10 14:30"},
+  {id:"DL-20250910-002",replenishNo:"REP-20250910-004",replenishCount:4,demandQty:240,driver:"张建国",vehicle:"粤B 77777",status:"配送中",progressDone:2,progressTotal:4,createdAt:"2025-09-10 08:00",startedAt:"2025-09-10 09:30",completedAt:"—"},
+  {id:"DL-20250910-003",replenishNo:"REP-20250910-005",replenishCount:6,demandQty:180,driver:"陈师傅",vehicle:"粤B 55555",status:"待配送",progressDone:0,progressTotal:6,createdAt:"2025-09-10 09:00",startedAt:"—",completedAt:"—"},
+  {id:"DL-20250909-008",replenishNo:"REP-20250909-008",replenishCount:3,demandQty:480,driver:"刘广远",vehicle:"沪A 66666",status:"履约完成",progressDone:3,progressTotal:3,createdAt:"2025-09-09 06:00",startedAt:"2025-09-09 07:00",completedAt:"2025-09-09 12:00"},
+  {id:"DL-20250910-004",replenishNo:"REP-20250910-006",replenishCount:2,demandQty:98,driver:"王配送",vehicle:"川A 5521B",status:"履约失败",progressDone:1,progressTotal:2,createdAt:"2025-09-10 09:15",startedAt:"2025-09-10 09:15",completedAt:"—"},
 ];
 
 export const DeliveryList = ({ onDetail }: { onDetail: () => void }) => {
@@ -1211,7 +1242,7 @@ export const DeliveryList = ({ onDetail }: { onDetail: () => void }) => {
               <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                 {[
                   {label:"配送单号",w:"150px"},{label:"关联补货单号",w:"150px"},{label:"关联补货单数",w:"100px",a:"right"},
-                  {label:"需配送件数",w:"100px",a:"right"},{label:"配送人员",w:"100px"},{label:"车辆",w:"110px"},
+                  {label:"需配送件数",w:"100px",a:"right"},{label:"配送人员",w:"100px"},{label:"配送进度",w:"140px"},{label:"车辆",w:"110px"},
                   {label:"状态",w:"100px"},{label:"创建时间",w:"140px"},{label:"开始配送时间",w:"140px"},
                   {label:"履约完成时间",w:"140px"},{label:"操作",w:"120px"},
                 ].map(h=>(
@@ -1239,6 +1270,16 @@ export const DeliveryList = ({ onDetail }: { onDetail: () => void }) => {
                         <Ic d={P.users} size={12} className="text-[#2563EB]"/>
                       </div>
                       <span className="text-sm text-[#334155]">{r.driver}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden flex-shrink-0">
+                        <div className="h-full rounded-full"
+                          style={{ width: `${Math.round(r.progressDone / r.progressTotal * 100)}%`,
+                            background: r.status === "履约失败" ? "#DC2626" : r.status === "履约完成" ? "#16A34A" : "#2563EB" }} />
+                      </div>
+                      <span className="text-xs text-[#64748B] font-medium">{r.progressDone}/{r.progressTotal} 点位</span>
                     </div>
                   </td>
                   <td className="px-4 py-3.5 whitespace-nowrap">
@@ -1461,10 +1502,24 @@ const PK_ROWS: PkRow[] = [
   {id:"PK-20250909-008",outboundNo:"OB-20250909-011",replenishNo:"REP-20250909-008",siteName:"天府软件园D2栋",siteAddr:"高新区天府大道中段1388号D2栋",ffBatch:"BC-20250909-008",siteCode:"SITE-CD-005",orderType:"补货出库",demandQty:480,actualQty:480,picker:"分拣-小王",createdAt:"2025-09-09 05:30",completedAt:"2025-09-09 07:00",status:"待配送"},
 ];
 
-export const PickingList = ({ onDetail }: { onDetail: () => void }) => (
+export const PickingList = ({ onDetail }: { onDetail: () => void }) => {
+  const [selPk, setSelPk] = useState<string[]>([]);
+  const [batchPrintOpen, setBatchPrintOpen] = useState(false);
+  const allChecked = selPk.length === PK_ROWS.length;
+  const toggleAll = () => setSelPk(allChecked ? [] : PK_ROWS.map(r => r.id));
+  const toggleOne = (id: string) => setSelPk(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+
+  return (
   <div>
     <PH title="分拣单列表" crumbs={["首页","履约后台","单据管理","分拣单列表"]}
-      actions={<Btn variant="secondary" icon="download" size="sm">导出</Btn>} />
+      actions={
+        <div className="flex items-center gap-2">
+          <Btn variant="secondary" icon="download" size="sm">导出</Btn>
+          <Btn variant="secondary" size="sm" disabled={selPk.length === 0} onClick={() => setBatchPrintOpen(true)}>
+            <Ic d={P.clipboard} size={13}/>批量打印{selPk.length > 0 ? `（${selPk.length}）` : ""}
+          </Btn>
+        </div>
+      } />
 
     <div className="flex items-start gap-3 px-4 py-3 mb-4 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] text-sm text-[#1E40AF]">
       <Ic d={P.info} size={15} className="flex-shrink-0 mt-0.5"/>
@@ -1504,6 +1559,9 @@ export const PickingList = ({ onDetail }: { onDetail: () => void }) => (
         <table className="w-full text-sm border-collapse" style={{minWidth:"1400px"}}>
           <thead>
             <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+              <th className="w-10 px-4 py-3">
+                <input type="checkbox" checked={allChecked} onChange={toggleAll} className="w-4 h-4 accent-[#2563EB] cursor-pointer"/>
+              </th>
               {[
                 {label:"分拣单号",w:"150px"},{label:"关联出库单号",w:"150px"},{label:"关联补货单号",w:"150px"},
                 {label:"点位名称",w:"150px"},{label:"点位地址",w:"180px"},{label:"履约批次",w:"130px"},
@@ -1522,7 +1580,10 @@ export const PickingList = ({ onDetail }: { onDetail: () => void }) => (
             {PK_ROWS.map((r,i)=>{
               const complete = r.actualQty === r.demandQty && r.actualQty > 0;
               return (
-                <tr key={r.id} className={`border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors ${i%2===1?"bg-[#FAFBFC]":""}`}>
+                <tr key={r.id} className={`border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors ${selPk.includes(r.id)?"bg-[#EFF6FF]":i%2===1?"bg-[#FAFBFC]":""}`}>
+                  <td className="px-4 py-3.5 text-center">
+                    <input type="checkbox" checked={selPk.includes(r.id)} onChange={() => toggleOne(r.id)} className="w-4 h-4 accent-[#2563EB] cursor-pointer"/>
+                  </td>
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <span className="font-mono text-xs font-medium text-[#2563EB] hover:underline cursor-pointer" onClick={onDetail}>{r.id}</span>
                   </td>
@@ -1557,8 +1618,46 @@ export const PickingList = ({ onDetail }: { onDetail: () => void }) => (
       </div>
       <Pager total={22} />
     </Card>
+
+    {/* 批量打印确认弹窗 */}
+    {batchPrintOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setBatchPrintOpen(false)}>
+        <div className="bg-white rounded-xl shadow-2xl w-[480px] max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+            <h2 className="text-[15px] font-semibold text-[#0F172A]">批量打印分拣面单</h2>
+            <button onClick={() => setBatchPrintOpen(false)} className="w-7 h-7 flex items-center justify-center rounded-md text-[#94A3B8] hover:text-[#475569] hover:bg-[#F1F5F9]">
+              <Ic d={P.x} size={16}/>
+            </button>
+          </div>
+          <div className="px-5 py-4 space-y-3">
+            <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-xs text-[#1E40AF]">
+              <Ic d={P.info} size={13} className="mt-0.5 flex-shrink-0"/>
+              <span>将向默认打印机提交 {selPk.length} 张分拣面单，仅已分拣完成的单据建议打印。</span>
+            </div>
+            <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+              <div className="px-3 py-2 bg-[#F8FAFC] border-b border-[#E2E8F0] text-[11px] font-semibold text-[#64748B] flex justify-between">
+                <span>分拣单号</span><span>点位名称</span>
+              </div>
+              {PK_ROWS.filter(r => selPk.includes(r.id)).map(r => (
+                <div key={r.id} className="flex justify-between items-center px-3 py-2 border-b border-[#F1F5F9] last:border-0 text-sm">
+                  <span className="font-mono text-xs text-[#2563EB]">{r.id}</span>
+                  <span className="text-[#334155]">{r.siteName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] rounded-b-xl">
+            <Btn variant="secondary" onClick={() => setBatchPrintOpen(false)}>取消</Btn>
+            <Btn variant="primary" onClick={() => { setBatchPrintOpen(false); setSelPk([]); }}>
+              <Ic d={P.clipboard} size={13}/>确认打印 {selPk.length} 张
+            </Btn>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
-);
+  );
+};
 
 // ── PickingDetail ────────────────────────────────────────────────────────────
 const PK_DETAIL_SKUS = [
@@ -2618,7 +2717,7 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
                       <Badge dot label={r.status} color="blue" />
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
+                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded border border-[#2563EB] transition-all">分配</button>
                     </td>
                   </tr>
                 ))}
@@ -2663,7 +2762,10 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
                       </div>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <button className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
+                        <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#EA580C] hover:bg-[#FFF7ED] rounded border border-transparent hover:border-[#FED7AA] transition-all">重新分配</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -2694,10 +2796,11 @@ const ptLabel = (status: string) => {
   return "待排车";
 };
 
-const MapView = ({ selectMode, selectedIds, onTogglePoint }: {
+const MapView = ({ selectMode, selectedIds, onTogglePoint, driverStops }: {
   selectMode: boolean;
   selectedIds: Set<string>;
   onTogglePoint: (id: string) => void;
+  driverStops?: TripStop[];
 }) => (
   <div className="relative w-full h-full bg-[#EEF2F7] overflow-hidden">
     <svg viewBox="0 0 580 340" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -2767,7 +2870,7 @@ const MapView = ({ selectMode, selectedIds, onTogglePoint }: {
         const isSelected = selectedIds.has(pt.id);
         const inSelectCircle = selectMode && Math.sqrt(Math.pow(pt.x - 300, 2) + Math.pow(pt.y - 190, 2)) < 72;
         return (
-          <g key={pt.id} onClick={() => onTogglePoint(pt.id)} style={{ cursor: "pointer" }}>
+          <g key={pt.id} onClick={() => onTogglePoint(pt.id)} style={{ cursor: "pointer" }} opacity={driverStops && driverStops.length > 0 ? 0.2 : 1}>
             {(isSelected || inSelectCircle) && (
               <circle cx={pt.x} cy={pt.y} r="11" fill={color} opacity="0.2" />
             )}
@@ -2783,6 +2886,21 @@ const MapView = ({ selectMode, selectedIds, onTogglePoint }: {
           </g>
         );
       })}
+
+      {/* 选中师傅的点位标注 */}
+      {driverStops && driverStops.length > 0 && (
+        <>
+          <polyline points={driverStops.map(s => `${s.x},${s.y}`).join(" ")} fill="none" stroke="#2563EB" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.5" />
+          {driverStops.map((s, i) => (
+            <g key={s.name}>
+              <circle cx={s.x} cy={s.y} r="11" fill={TRIP_STOP_COLOR[s.status]} opacity="0.2" />
+              <circle cx={s.x} cy={s.y} r="6.5" fill={TRIP_STOP_COLOR[s.status]} stroke="#fff" strokeWidth="2" />
+              <text x={s.x} y={s.y + 2.5} textAnchor="middle" fontSize="8" fontWeight="700" fill="#fff">{i + 1}</text>
+              <text x={s.x} y={s.y - 12} textAnchor="middle" fontSize="8" fill="#334155" fontFamily="sans-serif">{s.name}</text>
+            </g>
+          ))}
+        </>
+      )}
 
       {/* Scale bar */}
       <line x1="490" y1="325" x2="560" y2="325" stroke="#94A3B8" strokeWidth="1.5" />
@@ -2802,11 +2920,12 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
   const [selectedMapPts, setSelectedMapPts] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [showTripAssign, setShowTripAssign] = useState(false);
+  const [activeTrip, setActiveTrip] = useState<string | null>(null);
   const [whFilter, setWhFilter] = useState("");
   const [orderNoFilter, setOrderNoFilter] = useState("");
   const [addrFilter, setAddrFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("未分车");
 
   const pending = DISPATCH_ORDERS.filter(o => o.status === "待排车");
   const dispatched = DISPATCH_ORDERS.filter(o => o.status === "已排车");
@@ -2851,11 +2970,11 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
         <Inp value={orderNoFilter} onChange={setOrderNoFilter} placeholder="订货单号" className="w-32" />
         <Inp value={addrFilter} onChange={setAddrFilter} placeholder="订货地址" className="w-32" />
         <Sel value={typeFilter} onChange={setTypeFilter} className="w-28"
-          options={[{label:"订单类型",value:""},{label:"常规补货",value:"常规"},{label:"尝新补货",value:"尝新"}]} />
-        <Sel value={statusFilter} onChange={setStatusFilter} className="w-24"
-          options={[{label:"全部",value:""},{label:"待排车",value:"待排车"},{label:"已排车",value:"已排车"}]} />
+          options={[{label:"订单类型",value:""},{label:"补货单",value:"补货单"}]} />
+        <Sel value={statusFilter} onChange={setStatusFilter} className="w-28"
+          options={[{label:"分车状态",value:""},{label:"全部",value:"全部"},{label:"未分车",value:"未分车"}]} />
         <Btn variant="primary" size="sm" icon="search">查询</Btn>
-        <Btn variant="secondary" size="sm" icon="refresh" onClick={() => { setWhFilter(""); setOrderNoFilter(""); setAddrFilter(""); setTypeFilter(""); setStatusFilter(""); }}>刷新</Btn>
+        <Btn variant="secondary" size="sm" icon="refresh" onClick={() => { setWhFilter(""); setOrderNoFilter(""); setAddrFilter(""); setTypeFilter(""); setStatusFilter("未分车"); }}>刷新</Btn>
       </div>
 
       {/* Main body: map left, right panel */}
@@ -2884,7 +3003,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
 
           {/* Map */}
           <div className="flex-1 relative">
-            <MapView selectMode={selectMode} selectedIds={selectedMapPts} onTogglePoint={toggleMapPt} />
+            <MapView selectMode={selectMode} selectedIds={selectedMapPts} onTogglePoint={toggleMapPt} driverStops={activeTrip ? TRIP_STOPS[activeTrip] : undefined} />
             {/* Stats overlay */}
             <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm border border-[#E2E8F0] rounded-lg shadow-md overflow-hidden">
               {/* Row 1: 班次 + 补货单 */}
@@ -2921,6 +3040,26 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
                 <button className="ml-2 text-[#2563EB] hover:text-[#1D4ED8]" onClick={() => setSelectMode(false)}>加入订单池</button>
               </div>
             )}
+            {/* 选中师傅的图例卡片 */}
+            {activeTrip && !selectMode && (() => {
+              const trip = DISPATCH_TRIPS.find(t => t.id === activeTrip);
+              const stops = TRIP_STOPS[activeTrip] ?? [];
+              if (!trip) return null;
+              return (
+                <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm border border-[#E2E8F0] rounded-lg shadow-md px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-4 mb-1">
+                    <span className="text-xs font-semibold text-[#0F172A]">{trip.driver} · {trip.plate}</span>
+                    <button onClick={() => setActiveTrip(null)} className="text-[#94A3B8] hover:text-[#334155] text-xs leading-none">✕</button>
+                  </div>
+                  <div className="text-[10px] text-[#64748B] mb-1.5">{trip.area} · 今日配送点位 {stops.length} 个</div>
+                  <div className="flex items-center gap-2.5 text-[10px] text-[#64748B]">
+                    {(["已配送", "配送中", "待配送"] as const).map(s => (
+                      <span key={s} className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: TRIP_STOP_COLOR[s] }} />{s}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
         </div>
@@ -2930,17 +3069,21 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
 
           {/* Driver tiles */}
           <div className="px-3 pt-3 pb-2 border-b border-[#E2E8F0] flex-shrink-0">
-            <div className="text-[10px] font-semibold text-[#64748B] uppercase mb-2">车辆（师傅）列表</div>
+            <div className="text-[10px] font-semibold text-[#64748B] uppercase mb-2">车辆（师傅）列表 <span className="normal-case font-normal text-[#94A3B8]">（点击看其配送点位）</span></div>
             <div className="grid grid-cols-2 gap-1.5">
-              {DISPATCH_TRIPS.map(trip => (
-                <div key={trip.id}
-                  className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2 hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-all cursor-pointer">
-                  <div className="text-[11px] font-semibold text-[#0F172A] truncate mb-1">{trip.driver}</div>
-                  <div className="text-[10px] text-[#64748B]">
-                    <span className="text-[#2563EB] font-bold">{trip.scheduledOrders}</span>单 · <span className="text-[#7C3AED] font-bold">{trip.scheduledQty}</span>件
+              {DISPATCH_TRIPS.map(trip => {
+                const active = activeTrip === trip.id;
+                return (
+                  <div key={trip.id} onClick={() => setActiveTrip(active ? null : trip.id)}
+                    className={`rounded-lg p-2 border transition-all cursor-pointer ${active ? "border-[#2563EB] bg-[#EFF6FF] ring-1 ring-[#2563EB]" : "bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#2563EB] hover:bg-[#EFF6FF]"}`}>
+                    <div className="text-[11px] font-semibold text-[#0F172A] truncate mb-1">{trip.driver}</div>
+                    <div className="text-[10px] text-[#64748B]">
+                      <span className="text-[#2563EB] font-bold">{trip.scheduledOrders}</span>单 · <span className="text-[#7C3AED] font-bold">{trip.scheduledQty}</span>件
+                    </div>
+                    {active && <div className="text-[9px] text-[#2563EB] mt-0.5">已在地图标注点位</div>}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -2973,22 +3116,30 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
                   onClick={() => orderTab === "pending" && toggleOrder(order.id)}
                   className={`mx-2 mb-1 rounded p-2 border transition-all ${orderTab === "pending" ? "cursor-pointer" : "cursor-default"}
                     ${isSelected ? "bg-[#EFF6FF] border-[#2563EB]" : isMapHighlighted ? "bg-[#F0FDF4] border-[#86EFAC]" : "bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#CBD5E1]"}`}>
-                  <div className="flex items-start gap-1.5 mb-0.5">
+                  <div className="flex items-center gap-1.5 mb-0.5">
                     {orderTab === "pending" && (
-                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${isSelected ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]"}`}>
+                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]"}`}>
                         {isSelected && <Ic d={P.check} size={9} className="text-white" />}
                       </div>
                     )}
                     <div className="text-[11px] font-semibold text-[#0F172A] truncate flex-1">{order.siteName}</div>
+                    <span className="text-[10px] font-semibold text-[#7C3AED] bg-[#F5F3FF] border border-[#DDD6FE] px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {`第${(order.batch.slice(-1).charCodeAt(0) - 64)}批次`}
+                    </span>
                   </div>
-                  <div className="pl-5 text-[10px] text-[#64748B] truncate mb-0.5">
+                  <div className="pl-5 text-[10px] text-[#64748B] truncate mb-1">
                     {order.province}{order.city !== order.province ? order.city : ""}{order.district} {order.detailAddr}
                   </div>
                   <div className="flex items-center gap-1.5 pl-5">
-                    <span className="text-[10px] font-semibold text-[#7C3AED] bg-[#F5F3FF] border border-[#DDD6FE] px-1.5 py-0.5 rounded-full">
-                      {`第${(order.batch.slice(-1).charCodeAt(0) - 64)}批次`}
-                    </span>
-                    <span className="text-sm font-bold text-[#0F172A]">{order.goodsTotal}<span className="text-[10px] font-normal text-[#64748B] ml-0.5">件</span></span>
+                    <span className="text-sm font-bold text-[#0F172A] leading-none">{order.goodsTotal}<span className="text-[10px] font-normal text-[#64748B] ml-0.5">件</span></span>
+                    {orderTab === "dispatched" && order.driver && (
+                      <span className="ml-auto flex items-center gap-1 text-[10px] text-[#64748B] min-w-0">
+                        <Ic d={P.truck} size={10} className="text-[#8B5CF6] flex-shrink-0" />
+                        <span className="flex-shrink-0">已分配</span>
+                        <span className="font-semibold text-[#0F172A] flex-shrink-0">{order.driver}</span>
+                        {order.plate && <span className="font-mono text-[9px] bg-white border border-[#E2E8F0] rounded px-1 py-px text-[#64748B] tracking-wider flex-shrink-0">{order.plate}</span>}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -3128,7 +3279,6 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [wh, setWh] = useState("");
-  const [type, setType] = useState("");
   const [statusF, setStatusF] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -3139,7 +3289,6 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
     (!name || r.name.includes(name)) &&
     (!phone || r.phone.includes(phone)) &&
     (!wh || r.wh === wh) &&
-    (!type || r.type === type) &&
     (!statusF || r.status === statusF)
   );
 
@@ -3161,10 +3310,6 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
             <Sel value={wh} onChange={v => setWh(v)} className="w-40"
               options={WH_OPTS} />
           </FL>
-          <FL label="类型">
-            <Sel value={type} onChange={v => setType(v)} className="w-24"
-              options={[{ label: "全部", value: "" }, { label: "装机", value: "装机" }]} />
-          </FL>
           <FL label="状态">
             <Sel value={statusF} onChange={v => setStatusF(v)} className="w-24"
               options={[{ label: "全部", value: "" }, { label: "在工", value: "在工" }, { label: "休假", value: "休假" }, { label: "离职", value: "离职" }]} />
@@ -3180,7 +3325,7 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
           </FL>
           <div className="flex gap-2 pb-0.5">
             <Btn variant="primary" icon="search" size="sm">查询</Btn>
-            <Btn variant="secondary" size="sm" onClick={() => { setName(""); setPhone(""); setWh(""); setType(""); setStatusF(""); setDateFrom(""); setDateTo(""); }}>重置</Btn>
+            <Btn variant="secondary" size="sm" onClick={() => { setName(""); setPhone(""); setWh(""); setStatusF(""); setDateFrom(""); setDateTo(""); }}>重置</Btn>
           </div>
         </div>
       </Card>
@@ -3189,7 +3334,7 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-              {["人员编码", "姓名", "手机号", "绑定仓库", "类型", "状态", "入职日期", "备注", "操作"].map(h => (
+              {["人员编码", "姓名", "手机号", "绑定仓库", "状态", "入职日期", "备注", "操作"].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[#64748B] whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -3201,7 +3346,6 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
                 <td className="px-4 py-3 font-medium text-[#0F172A]">{r.name}</td>
                 <td className="px-4 py-3 font-mono text-xs text-[#64748B]">{r.phone}</td>
                 <td className="px-4 py-3 text-[#64748B] text-xs">{r.wh}</td>
-                <td className="px-4 py-3"><Badge label={r.type} color="blue" /></td>
                 <td className="px-4 py-3"><Badge dot label={r.status} color={ENG_STATUS_COLOR[r.status]} /></td>
                 <td className="px-4 py-3 text-xs text-[#64748B]">{r.joinDate}</td>
                 <td className="px-4 py-3 text-xs text-[#64748B] max-w-[140px] truncate">{r.remark || "—"}</td>
@@ -3213,7 +3357,7 @@ export const EngineerList = ({ onCreate, onEdit }: { onCreate: () => void; onEdi
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={9} className="px-4 py-12 text-center text-[#94A3B8] text-sm">暂无数据</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={8} className="px-4 py-12 text-center text-[#94A3B8] text-sm">暂无数据</td></tr>}
           </tbody>
         </table>
         <Pager total={rows.length} />
@@ -3254,7 +3398,6 @@ export const EngineerForm = ({ onBack, isEdit = false }: { onBack: () => void; i
   const [phone, setPhone] = useState("");
   const [idNo, setIdNo] = useState("");
   const [wh, setWh] = useState("");
-  const [type] = useState("装机");
   const [status, setStatus] = useState<EngStatus>("在工");
   const [joinDate, setJoinDate] = useState("");
   const [billing, setBilling] = useState("");
@@ -3315,9 +3458,6 @@ export const EngineerForm = ({ onBack, isEdit = false }: { onBack: () => void; i
             </EF>
             <EF label="身份证号" required error={errors.idNo}>
               <Inp value={idNo} onChange={v => { setIdNo(v); setErrors(p => ({ ...p, idNo: "" })); }} placeholder="请输入身份证号码" />
-            </EF>
-            <EF label="类型" required>
-              <Inp value={type} disabled className="bg-[#F8FAFC] text-[#64748B] cursor-not-allowed" />
             </EF>
             <EF label="绑定仓库" required error={errors.wh}>
               <Sel value={wh} onChange={v => { setWh(v); setErrors(p => ({ ...p, wh: "" })); }} className="w-full"
@@ -3421,7 +3561,6 @@ export const EngineerForm = ({ onBack, isEdit = false }: { onBack: () => void; i
               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg divide-y divide-[#F1F5F9] mb-6 text-left text-sm">
                 <div className="flex justify-between px-4 py-3"><span className="text-[#94A3B8]">姓名</span><span className="font-semibold text-[#0F172A]">{engName}</span></div>
                 <div className="flex justify-between px-4 py-3"><span className="text-[#94A3B8]">手机号</span><span className="font-mono">{phone}</span></div>
-                <div className="flex justify-between px-4 py-3"><span className="text-[#94A3B8]">类型</span><Badge label="装机" color="blue" /></div>
                 <div className="flex justify-between px-4 py-3"><span className="text-[#94A3B8]">状态</span><Badge dot label={status} color={ENG_STATUS_COLOR[status]} /></div>
               </div>
               <div className="flex gap-3 justify-center">
@@ -3451,6 +3590,11 @@ const WO_SITE_INFO = {
   scene1: "写字楼",
   scene2: "互联网企业园区",
   installPos: "1楼大堂右侧",
+  customLook: "是",
+  report: "是",
+  elevator: "是",
+  shed: "否",
+  customPhotos: ["定制外观·正面", "定制外观·侧面", "定制外观·LOGO"],
   photos: ["图1", "图2", "图3"],
   hasSmartComp: "否",
   hasTradComp: "否",
@@ -3662,28 +3806,22 @@ export const WorkOrderList = ({ onDetail, onAssign }: { onDetail: () => void; on
                   </td>
                   {/* 操作 */}
                   <td className="px-3 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      {["待分配", "待处理"].includes(r.status) && (
+                    <div className="flex items-center gap-1.5">
+                      {r.status === "待分配" && (
                         <button
                           onClick={onAssign}
-                          className="px-2 py-1 text-xs text-white bg-[#F97316] hover:bg-[#EA580C] rounded font-medium transition-colors"
-                        >接单</button>
-                      )}
-                      {r.status === "处理中" && (
-                        <button
-                          onClick={onAssign}
-                          className="px-2 py-1 text-xs text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded font-medium transition-colors"
-                        >去处理</button>
+                          className="px-2 py-1 text-[11px] text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded border border-[#2563EB] transition-all"
+                        >分配</button>
                       )}
                       <button
                         onClick={onDetail}
-                        className="px-2 py-1 text-xs text-[#64748B] bg-[#F8FAFC] hover:bg-[#F1F5F9] rounded font-medium transition-colors border border-[#E2E8F0]"
-                      >详情</button>
+                        className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all"
+                      >查看详情</button>
                       {["待分配", "待处理", "处理中"].includes(r.status) && (
                         <button
                           onClick={() => setCancelModal(r.id)}
-                          className="px-2 py-1 text-xs text-[#DC2626] hover:bg-[#FEF2F2] rounded font-medium transition-colors"
-                        >取消</button>
+                          className="px-2 py-1 text-[11px] text-[#DC2626] hover:bg-[#FEF2F2] rounded border border-transparent hover:border-[#FECACA] transition-all"
+                        >取消工单</button>
                       )}
                     </div>
                   </td>
@@ -3732,6 +3870,12 @@ export const WorkOrderList = ({ onDetail, onAssign }: { onDetail: () => void; on
 export const WorkOrderDetail = ({ onBack }: { onBack: () => void }) => {
   const wo = WO_ROWS[0];
   const si = WO_SITE_INFO;
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  // 是/否文本展示
+  const YN = ({ v }: { v: string }) => (
+    <span className={`font-medium ${v === "是" ? "text-[#16A34A]" : "text-[#64748B]"}`}>{v}</span>
+  );
 
   // 状态流转节点（处理中 为当前节点）
   const STATUS_STEPS = [
@@ -3845,6 +3989,24 @@ export const WorkOrderDetail = ({ onBack }: { onBack: () => void }) => {
               <ROField label="一级场景" value={si.scene1} />
               <ROField label="二级场景" value={si.scene2} />
               <ROField label="设备安装位置" value={si.installPos} />
+              <ROField label="是否定制外观" value={<YN v={si.customLook} />} />
+              <ROField label="是否需提前报备" value={<YN v={si.report} />} />
+              <ROField label="是否有电梯" value={<YN v={si.elevator} />} />
+              <ROField label="是否需户外棚" value={<YN v={si.shed} />} />
+              {si.report === "是" && (
+                <div className="col-span-3">
+                  <div className="text-xs text-[#94A3B8] mb-1">定制外观照片 <span className="text-[#CBD5E1]">· 提前报备已选“是”，点击可预览预留照片</span></div>
+                  <div className="flex gap-2">
+                    {si.customPhotos.map((p, i) => (
+                      <div key={i} onClick={() => setPhotoPreview(p)}
+                        className="w-16 h-16 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] flex flex-col items-center justify-center gap-1 text-[10px] text-[#94A3B8] cursor-pointer hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="#94A3B8" /><circle cx="5.5" cy="6" r="1.2" fill="#CBD5E1" /><path d="M2.5 11.5l3.5-3 2.5 2 2.5-2.5 2.5 3" stroke="#CBD5E1" strokeWidth="1.2" fill="none" /></svg>
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="col-span-3">
                 <div className="text-xs text-[#94A3B8] mb-1">场地照片</div>
                 <div className="flex gap-2">
@@ -3919,6 +4081,26 @@ export const WorkOrderDetail = ({ onBack }: { onBack: () => void }) => {
           </Card>
         </div>
       </div>
+
+      {/* 定制外观照片预览弹窗 */}
+      {photoPreview && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center" onClick={() => setPhotoPreview(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-semibold text-[#0F172A]">定制外观照片预览</span>
+              <button onClick={() => setPhotoPreview(null)} className="text-[#94A3B8] hover:text-[#334155]"><Ic d={P.x} size={16} /></button>
+            </div>
+            <div className="h-64 rounded-lg bg-[#F1F5F9] border border-dashed border-[#CBD5E1] flex flex-col items-center justify-center gap-3 text-[#94A3B8]">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="5" y="9" width="38" height="30" rx="4" stroke="#CBD5E1" strokeWidth="2" /><circle cx="16" cy="19" r="3.5" fill="#E2E8F0" /><path d="M9 33l10-9 7 6 8-8 6 8" stroke="#CBD5E1" strokeWidth="2.5" fill="none" /></svg>
+              <span className="text-sm font-medium text-[#64748B]">{photoPreview}</span>
+              <span className="text-xs">照片预留位 · 上线后展示定制外观实拍</span>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Btn variant="secondary" onClick={() => setPhotoPreview(null)}>关闭</Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -4301,15 +4483,8 @@ export const DispatchScheduleList = ({ onWorkbench }: { onWorkbench: () => void 
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1">
-                      <button className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
-                      <button className="px-2 py-1 text-[11px] text-[#64748B] hover:bg-[#F8FAFC] rounded border border-transparent hover:border-[#E2E8F0] transition-all">重新分配</button>
-                      <div className="relative group">
-                        <button className="px-2 py-1 text-[11px] text-[#64748B] hover:bg-[#F8FAFC] rounded border border-transparent hover:border-[#E2E8F0] transition-all">更多 ▾</button>
-                        <div className="absolute right-0 top-full mt-1 bg-white border border-[#E2E8F0] rounded-lg shadow-lg z-10 min-w-[120px] hidden group-hover:block">
-                          <button className="block w-full text-left px-3 py-2 text-xs text-[#334155] hover:bg-[#F8FAFC]">打印面单</button>
-                          <button className="block w-full text-left px-3 py-2 text-xs text-[#334155] hover:bg-[#F8FAFC]">推送分拣通知</button>
-                        </div>
-                      </div>
+                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
+                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#EA580C] hover:bg-[#FFF7ED] rounded border border-transparent hover:border-[#FED7AA] transition-all">重新分配</button>
                     </div>
                   </td>
                 </tr>
@@ -4337,6 +4512,7 @@ export const DispatchScheduleList = ({ onWorkbench }: { onWorkbench: () => void 
               <label className="text-xs font-medium text-[#334155]">发车日期 <span className="text-[#DC2626]">*</span></label>
               <input type="date" value={planDate} onChange={e => setPlanDate(e.target.value)}
                 className="w-full border border-[#E2E8F0] rounded-md px-3 py-2 text-sm text-[#334155] bg-white focus:outline-none focus:ring-1 focus:ring-[#2563EB]" />
+              <p className="text-[11px] text-[#94A3B8] leading-snug">12点前操作：默认当日；12点后操作：默认次日</p>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-[#334155]">排车备注</label>
