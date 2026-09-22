@@ -1,0 +1,10 @@
+{
+  "description": "A comprehensive platform streamlining smart retail cabinet operations with sales, ERP, and customer management for efficient multi-role collaboration.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
