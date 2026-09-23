@@ -827,9 +827,9 @@ const LOC_DATA = [
     level: "A",
     scene: "学校",
     status: "启用",
-    deviceStatus: "离线",
-    offlineAt: "09-21 08:15",
-    offlineDays: "已离线 1 天",
+    deviceStatus: "未绑定",
+    offlineAt: "",
+    offlineDays: "",
     auditStatus: "待审核",
     created: "2025-03-01",
   },
@@ -848,18 +848,25 @@ const locStatusTag = (s: string) =>
     </span>
   )
 
-const deviceStatusTag = (s: string) =>
-  s === "在线" ? (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECFDF5] text-[#059669]">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
-      {s}
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FEF2F2] text-[#DC2626]">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+// 设备状态枚举：在线 / 离线 / 未绑定（新增枚举只需扩展此配置）
+const DEVICE_STATUS_META: Record<
+  string,
+  { bg: string; text: string; dot: string; hollow?: boolean }
+> = {
+  在线: { bg: "bg-[#ECFDF5]", text: "text-[#059669]", dot: "bg-[#059669]" },
+  离线: { bg: "bg-[#FEF2F2]", text: "text-[#DC2626]", dot: "bg-[#DC2626]" },
+  未绑定: { bg: "bg-[#F1F5F9]", text: "text-[#94A3B8]", dot: "border-[#94A3B8]", hollow: true },
+}
+
+const deviceStatusTag = (s: string) => {
+  const m = DEVICE_STATUS_META[s] ?? DEVICE_STATUS_META["未绑定"]!
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${m.bg} ${m.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${m.hollow ? "bg-transparent border" : m.dot}`} />
       {s}
     </span>
   )
+}
 
 const LEVEL_BADGE: Record<string, string> = {
   "S+": "bg-[#FFF1F2] text-[#E11D48]",
@@ -883,11 +890,15 @@ const LocationList = ({
   onTabChange: (t: string) => void
 }) => {
   const [statusFilter, setStatusFilter] = useState("全部")
+  const [deviceFilter, setDeviceFilter] = useState("全部")
   const [expanded, setExpanded] = useState(false)
   const STATUS_OPTS = ["全部", "启用", "禁用"]
+  const DEVICE_OPTS = ["全部", "在线", "离线", "未绑定"]
 
   const filtered = LOC_DATA.filter(
-    (l) => statusFilter === "全部" || l.status === statusFilter,
+    (l) =>
+      (statusFilter === "全部" || l.status === statusFilter) &&
+      (deviceFilter === "全部" || l.deviceStatus === deviceFilter),
   )
 
   return (
@@ -1006,6 +1017,27 @@ const LocationList = ({
             </div>
             <div className="flex items-start gap-3">
               <span className="text-xs text-[#94A3B8] w-16 flex-shrink-0 pt-1.5">
+                设备状态
+              </span>
+              <div className="flex gap-1.5 flex-wrap">
+                {DEVICE_OPTS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setDeviceFilter(s)}
+                    className={`h-7 px-3 rounded-full text-xs font-medium transition-all
+                      ${
+                        deviceFilter === s
+                          ? "bg-[#2563EB] text-white"
+                          : "bg-[#F5F7FA] text-[#64748B]"
+                      }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-xs text-[#94A3B8] w-16 flex-shrink-0 pt-1.5">
                 审核状态
               </span>
               <div className="flex gap-1.5 flex-wrap">
@@ -1055,6 +1087,9 @@ const LocationList = ({
                   <span className="text-[10px] text-[#94A3B8]">
                     离线于 {loc.offlineAt} · {loc.offlineDays}
                   </span>
+                )}
+                {loc.deviceStatus === "未绑定" && (
+                  <span className="text-[10px] text-[#94A3B8]">尚未绑定设备</span>
                 )}
               </div>
             </div>
@@ -1293,23 +1328,83 @@ const AuditCard = ({ state }: { state: AuditState }) => {
   )
 }
 
+// 点位基本信息详情（点位详情“基本信息”tab 与审批详情“具体详情”共用）
+const LocationBasicDetail = ({ loc }: { loc: (typeof LOC_DATA)[number] }) => (
+  <>
+    <MC className="mt-3">
+      <MKV label="归属客户" value={loc.customer} highlight />
+      <MKV label="点位名称" value={loc.name} />
+      <MKV label="点位地区" value={loc.region} />
+      <MKV label="详细地址" value={loc.addr} />
+      <MKV label="经纬度" value="113.944°E, 22.538°N" />
+      <MKV label="覆盖人数" value="约 3,200 人" />
+      <MKV label="一级场景" value={loc.scene} />
+      <MKV label="二级场景" value="商务茶水间" />
+      <MKV label="设备安装位置" value="茶水间" />
+      <MKV label="是否有竞对智能售货机" value="无" />
+      <MKV label="是否有竞对传统售货机" value="有" />
+      <MKV label="百米内是否有便利店" value="无" />
+      <MKV label="点位信息备注" value="入口左侧，靠近电梯口，客流高峰为早9点和午11-13点" />
+    </MC>
+    <MSec title="场地照片" />
+    <MC noPad>
+      <div className="px-4 pt-3 pb-3">
+        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {["#CBD5E1", "#94A3B8", "#64748B", "#475569", "#334155"].map((bg, i) => (
+            <div key={i} style={{ background: bg }}
+              className="w-24 h-24 rounded-[8px] flex-shrink-0 flex items-center justify-center cursor-pointer">
+              <Ic d={P.eye} size={18} className="text-white opacity-60" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </MC>
+  </>
+)
+
+// 补货记录（补货列表 tab 与补货单详情共用）
+const RESTOCK_RECORDS = [
+  { no: "R0-2025-0301-001", batch: "第1批", creator: "张运营", fulfiller: "李补货", time: "2025-03-01 10:00", count: "48", doneAt: "2025-03-01 14:30", status: "已完成",
+    goods: [
+      { name: "农夫山泉 550ml", spec: "550ml", layer: "第1层", count: "18" },
+      { name: "东方树叶 500ml", spec: "500ml", layer: "第2层", count: "12" },
+      { name: "乐事薯片 75g", spec: "75g", layer: "第3层", count: "18" },
+    ] },
+  { no: "R0-2025-0210-003", batch: "第1批", creator: "王主管", fulfiller: "陈补货", time: "2025-02-10 09:30", count: "36", doneAt: "2025-02-10 13:00", status: "已完成",
+    goods: [
+      { name: "可口可乐 330ml", spec: "330ml", layer: "第1层", count: "14" },
+      { name: "元气森林气泡水", spec: "480ml", layer: "第2层", count: "10" },
+      { name: "旺仔牛奶 245ml", spec: "245ml", layer: "第4层", count: "12" },
+    ] },
+  { no: "R0-2025-0118-002", batch: "第2批", creator: "张运营", fulfiller: "—", time: "2025-01-18 08:00", count: "24", doneAt: "—", status: "待履约",
+    goods: [
+      { name: "自热米饭红烧牛肉", spec: "标准装", layer: "第5层", count: "10" },
+      { name: "方便面 合味道", spec: "77g", layer: "第6层", count: "14" },
+    ] },
+]
+
 const LocationDetail = ({
   onBack,
   onApproval,
   onResubmit,
+  embedded = false,
 }: {
-  onBack: () => void
-  onApproval: () => void
+  onBack?: () => void
+  onApproval?: () => void
   onResubmit?: () => void
+  /** 嵌入模式：无导航栏、自然高度，用于审批详情“具体详情”内展示完整点位详情 */
+  embedded?: boolean
 }) => {
   const loc = LOC_DATA[0]
   const [auditIdx, setAuditIdx] = useState(2)
   const AUDIT_STATES: AuditState[] = ["待审核", "审核中", "审核通过", "审核驳回"]
   const auditState = AUDIT_STATES[auditIdx]
 
-  type TabKey = "基本信息" | "商务合同" | "运营配置" | "关联装机工单" | "经营数据" | "审核状态"
-  const TABS: TabKey[] = ["基本信息", "运营配置", "关联装机工单", "经营数据", "审核状态", "商务合同"]
+  type TabKey = "基本信息" | "运营数据" | "运营配置" | "设备信息" | "联系人信息" | "关联工单" | "商务合同" | "补货列表" | "审核状态"
+  const TABS: TabKey[] = ["基本信息", "运营数据", "运营配置", "设备信息", "联系人信息", "关联工单", "商务合同", "补货列表", "审核状态"]
   const [activeTab, setActiveTab] = useState<TabKey>("基本信息")
+  // 补货单详情（覆盖层）
+  const [restockNo, setRestockNo] = useState<string | null>(null)
 
   const SKU_RANK = [
     { rank: 1, name: "可口可乐 330ml", sales: "1,240件", amt: "¥2,728" },
@@ -1325,11 +1420,15 @@ const LocationDetail = ({
   ]
 
   return (
-    <div className="h-full flex flex-col bg-[#F5F7FA]">
+    <div className={embedded
+      ? "relative bg-[#F5F7FA] rounded-[12px] overflow-hidden border border-[#E2E8F0]"
+      : "relative h-full flex flex-col bg-[#F5F7FA]"}>
       {/* NavBar */}
-      <div className="bg-white flex-shrink-0 shadow-[0_1px_0_0_#F1F5F9]">
-        <NavBar title="点位详情" onBack={onBack} />
-      </div>
+      {!embedded && (
+        <div className="bg-white flex-shrink-0 shadow-[0_1px_0_0_#F1F5F9]">
+          <NavBar title="点位详情" onBack={onBack} />
+        </div>
+      )}
 
       {/* Horizontal tab bar */}
       <div className="bg-white flex-shrink-0 border-b border-[#F1F5F9]">
@@ -1350,43 +1449,52 @@ const LocationDetail = ({
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-y-auto pb-6">
+      <div className={embedded ? "pb-4" : "flex-1 overflow-y-auto pb-6"}>
 
         {/* ── 基本信息 ── */}
-        {activeTab === "基本信息" && (
-          <>
-            <MC className="mt-3">
-              <MKV label="归属客户" value={loc.customer} highlight />
-              <MKV label="点位名称" value={loc.name} />
-              <MKV label="点位地区" value={loc.region} />
-              <MKV label="详细地址" value={loc.addr} />
-              <MKV label="经纬度" value="113.944°E, 22.538°N" />
-              <MKV label="覆盖人数" value="约 3,200 人" />
-              <MKV label="一级场景" value={loc.scene} />
-              <MKV label="二级场景" value="商务茶水间" />
-              <MKV label="设备安装位置" value="茶水间" />
-              <MKV label="是否有竞对智能售货机" value="无" />
-              <MKV label="是否有竞对传统售货机" value="有" />
-              <MKV label="百米内是否有便利店" value="无" />
-              <MKV label="点位信息备注" value="入口左侧，靠近电梯口，客流高峰为早9点和午11-13点" />
-            </MC>
-            <MSec title="场地照片" />
-            <MC noPad>
-              <div className="px-4 pt-3 pb-3">
-                <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-                  {["#CBD5E1", "#94A3B8", "#64748B", "#475569", "#334155"].map((bg, i) => (
-                    <div key={i} style={{ background: bg }}
-                      className="w-24 h-24 rounded-[8px] flex-shrink-0 flex items-center justify-center cursor-pointer">
-                      <Ic d={P.eye} size={18} className="text-white opacity-60" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </MC>
-          </>
-        )}
+        {activeTab === "基本信息" && <LocationBasicDetail loc={loc} />}
 
       
+
+        {/* ── 联系人信息 ── */}
+        {activeTab === "联系人信息" && (
+          <MC className="mt-3">
+            <MKV label="联系人姓名" value="张主任" />
+            <MKV label="联系电话" value={<span className="text-[#2563EB]">138-8888-0001</span>} />
+            <MKV label="联系人性别" value="男" />
+            <MKV label="联系人微信号" value="zhangzr_fc" />
+            <MKV label="联系人邮箱" value="zhang@fengchao.com" />
+            <MKV label="联系人身份" value="行政主管" />
+          </MC>
+        )}
+
+        {/* ── 设备信息（含云信息）── */}
+        {activeTab === "设备信息" && (
+          <>
+            <MC className="mt-3">
+              <MKV label="设备资产编码" value={<span className="font-mono">DEV-2025-0042</span>} />
+              <MKV label="尺寸" value="1200 × 800 × 2000 mm" />
+              <MKV label="功能属性" value="冷藏 / 常温双温区" />
+              <MKV label="设备型号" value="智柜 Pro X8" />
+              <MKV label="层板配置" value="5 层可调层板" />
+              <MKV label="额定电压" value="220 V" />
+              <MKV label="额定电流" value="3.5 A" />
+              <MKV label="额定功率" value="350 W" />
+              <MKV label="额定功耗" value="2.8 kWh/24h" />
+              <MKV label="是否有刷脸屏" value="是" />
+              <MKV label="是否有摄像头" value="是" />
+            </MC>
+            <MSec title="设备云信息" />
+            <MC>
+              <MKV label="在线状态" value={deviceStatusTag(loc.deviceStatus)} />
+              <MKV label="实时温度" value={<span className="font-semibold text-[#0F172A]">5.2 ℃</span>} />
+              <MKV label="实时功率" value={<span className="font-semibold text-[#0F172A]">148 W</span>} />
+            </MC>
+            <div className="px-4 mt-2 text-[10px] text-[#CBD5E1] leading-relaxed">
+              * 云端每 5 分钟上报刷新 · 最近更新 09-23 10:32
+            </div>
+          </>
+        )}
 
         {/* ── 运营配置 ── */}
         {activeTab === "运营配置" && (
@@ -1401,8 +1509,8 @@ const LocationDetail = ({
           </MC>
         )}
 
-        {/* ── 关联装机工单 ── */}
-        {activeTab === "关联装机工单" && (
+        {/* ── 关联工单 ── */}
+        {activeTab === "关联工单" && (
           <>
             <MC className="mt-3">
               <MKV label="是否同步安装申请" value="是" />
@@ -1434,8 +1542,8 @@ const LocationDetail = ({
           </>
         )}
 
-        {/* ── 经营数据（含SKU） ── */}
-        {activeTab === "经营数据" && (
+        {/* ── 运营数据（含SKU）── */}
+        {activeTab === "运营数据" && (
           <>
             <MC noPad className="mt-3">
               <div className="grid grid-cols-2 divide-x divide-y divide-[#F1F5F9]">
@@ -1493,30 +1601,60 @@ const LocationDetail = ({
         )}
         {/* ── 商务合同 ── */}
         {activeTab === "商务合同" && (
+          <MC className="mt-3">
+            <MKV label="合同附件" value={
+              <button className="flex items-center gap-1 text-[#2563EB] text-sm font-medium">
+                <Ic d={P.clip} size={13} />
+                合同协议书_蜂巢北楼.pdf
+              </button>
+            } />
+          </MC>
+        )}
+        {/* ── 补货列表 ── */}
+        {activeTab === "补货列表" && (
           <>
-            <MC className="mt-3">
-              <MKV label="合同附件" value={
-                <button className="flex items-center gap-1 text-[#2563EB] text-sm font-medium">
-                  <Ic d={P.clip} size={13} />
-                  合同协议书_蜂巢北楼.pdf
-                </button>
-              } />
-            </MC>
-            <MSec title="联系人信息" />
-            <MC>
-              <MKV label="联系人姓名" value="张主任" />
-              <MKV label="联系电话" value={<span className="text-[#2563EB]">138-8888-0001</span>} />
-              <MKV label="联系人性别" value="男" />
-              <MKV label="联系人微信号" value="zhangzr_fc" />
-              <MKV label="联系人邮箱" value="zhang@fengchao.com" />
-              <MKV label="联系人身份" value="行政主管" />
-            </MC>
+            {RESTOCK_RECORDS.map(r => (
+              <div key={r.no} onClick={() => setRestockNo(r.no)}
+                className="cursor-pointer active:opacity-70 transition-opacity">
+                <MC noPad className="mt-3">
+                  <div className="px-4 py-3 flex items-center justify-between border-b border-[#F1F5F9]">
+                    <span className="font-mono text-[13px] font-semibold text-[#2563EB]">{r.no}</span>
+                    <span className="flex items-center gap-1">
+                      <Tag label={r.status} color={r.status === "已完成" ? "green" : "yellow"} />
+                      <Ic d={P.chevR} size={14} className="text-[#CBD5E1]" />
+                    </span>
+                  </div>
+                  <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+                    {[
+                      { l: "补货批次", v: r.batch },
+                      { l: "补货件数", v: `${r.count} 件`, bold: true },
+                      { l: "创建人员", v: r.creator },
+                      { l: "履约人员", v: r.fulfiller },
+                      { l: "补货时间", v: r.time },
+                      { l: "履约完成时间", v: r.doneAt },
+                    ].map(f => (
+                      <div key={f.l}>
+                        <div className="text-[11px] text-[#94A3B8] mb-0.5">{f.l}</div>
+                        <div className={`text-sm ${f.bold ? "font-bold text-[#0F172A]" : "text-[#0F172A]"}`}>{f.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-4 py-2.5 border-t border-[#F1F5F9] flex justify-end">
+                    <span onClick={e => { e.stopPropagation(); setRestockNo(r.no) }}
+                      className="inline-flex items-center gap-0.5 text-xs font-semibold text-[#2563EB] bg-[#EFF6FF] border border-[#2563EB]/25 rounded-full px-3.5 py-1.5 active:bg-[#DBEAFE] transition-colors">
+                      查看详情<Ic d={P.chevR} size={12} />
+                    </span>
+                  </div>
+                </MC>
+              </div>
+            ))}
+            <p className="px-4 py-3 text-[11px] text-[#94A3B8] text-center">共 {RESTOCK_RECORDS.length} 条补货记录，点击卡片查看详情</p>
           </>
         )}
       </div>
 
       {/* 重新发起 bottom bar — shown when audit is rejected */}
-      {activeTab === "审核状态" && auditState === "审核驳回" && (
+      {!embedded && activeTab === "审核状态" && auditState === "审核驳回" && (
         <div className="bg-white border-t border-[#F1F5F9] px-4 py-3 flex gap-3 flex-shrink-0">
           <div className="flex-1 flex flex-col justify-center">
             <span className="text-xs text-[#DC2626]">审核已驳回</span>
@@ -1528,6 +1666,50 @@ const LocationDetail = ({
           </button>
         </div>
       )}
+
+      {/* ── 补货单详情（覆盖层）── */}
+      {restockNo && (() => {
+        const r = RESTOCK_RECORDS.find(x => x.no === restockNo)
+        if (!r) return null
+        return (
+          <div className="absolute inset-0 z-30 bg-[#F5F7FA] flex flex-col">
+            <div className="bg-white flex-shrink-0 shadow-[0_1px_0_0_#F1F5F9]">
+              <NavBar title="补货单详情" onBack={() => setRestockNo(null)} />
+            </div>
+            <div className="flex-1 overflow-y-auto pb-6">
+              <MC className="mt-3">
+                <MKV label="补货单号" value={<span className="font-mono text-[13px] font-semibold text-[#2563EB]">{r.no}</span>} />
+                <MKV label="状态" value={<Tag label={r.status} color={r.status === "已完成" ? "green" : "yellow"} />} />
+                <MKV label="补货批次" value={r.batch} />
+                <MKV label="补货件数" value={<span className="font-bold">{r.count} 件</span>} />
+                <MKV label="创建人员" value={r.creator} />
+                <MKV label="履约人员" value={r.fulfiller} />
+                <MKV label="补货时间" value={r.time} />
+                <MKV label="履约完成时间" value={r.doneAt} />
+              </MC>
+              <MSec title="商品明细" />
+              <MC noPad>
+                <div className="grid bg-[#F8FAFC] border-b border-[#F1F5F9] text-[11px] text-[#64748B]"
+                  style={{ gridTemplateColumns: "1fr 72px 56px 64px" }}>
+                  <div className="px-3 py-2">商品名称</div>
+                  <div className="px-2 py-2">规格</div>
+                  <div className="px-2 py-2">摆放层</div>
+                  <div className="px-3 py-2 text-right">补货数量</div>
+                </div>
+                {r.goods.map(g => (
+                  <div key={g.name} className="grid items-center border-b border-[#F1F5F9] last:border-0 text-sm text-[#0F172A]"
+                    style={{ gridTemplateColumns: "1fr 72px 56px 64px" }}>
+                    <div className="px-3 py-3">{g.name}</div>
+                    <div className="px-2 py-3 text-[13px] text-[#64748B]">{g.spec}</div>
+                    <div className="px-2 py-3 text-[13px] text-[#64748B]">{g.layer}</div>
+                    <div className="px-3 py-3 text-right font-semibold">{g.count} 件</div>
+                  </div>
+                ))}
+              </MC>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -1643,20 +1825,14 @@ const NewLocation = ({
           <MF label="覆盖人数">
             <MInput placeholder="正整数，如：3000" type="number" suffix="人" />
           </MF>
-          <MF label="一级场景">
+          <MF label="一级场景" required>
             <MSelect
               placeholder="请选择"
               options={["运动", "写字楼", "工厂", "学校", "医院", "其他"]}
             />
           </MF>
-          <MF label="二级场景">
-            <MSelect placeholder="请选择" options={["商务茶水间", "员工餐厅", "大堂休息区", "健身房", "图书馆", "便利店旁", "走廊过道", "其他"]} />
-          </MF>
-          <MF label="设备安装位置">
-            <MSelect
-              placeholder="请选择"
-              options={["前台", "茶水间", "休息区", "办公区", "大堂", "其他"]}
-            />
+          <MF label="二级场景" required>
+            <MSelect placeholder="与一级场景联动，请先选择" options={["商务茶水间", "员工餐厅", "大堂休息区", "健身房", "图书馆", "便利店旁", "走廊过道", "其他"]} />
           </MF>
           <MF label="场地照片" required>
             <div className="mt-1.5 flex flex-wrap gap-2">
@@ -1677,21 +1853,21 @@ const NewLocation = ({
               支持 jpg/png，单张最大 5MB
             </div>
           </MF>
-          <MF label="是否有竞对智能售货机">
+          <MF label="是否有竞对智能售货机" required>
             <RadioGroup
               value={rivalSmart}
               options={["有", "无"]}
               onChange={setRivalSmart}
             />
           </MF>
-          <MF label="是否有竞对传统售货机">
+          <MF label="是否有竞对传统售货机" required>
             <RadioGroup
               value={rivalTrad}
               options={["有", "无"]}
               onChange={setRivalTrad}
             />
           </MF>
-          <MF label="百米内是否有便利店">
+          <MF label="百米内是否有便利店" required>
             <RadioGroup
               value={nearStore}
               options={["有", "无"]}
@@ -1707,8 +1883,8 @@ const NewLocation = ({
           </MF>
         </MC>
 
-        {/* ── 2. 商务/合同信息 ── */}
-        <MSec title="商务 / 合同信息" />
+        {/* ── 2. 合同信息 ── */}
+        <MSec title="合同信息" />
         <MC>
           <MF label="合同附件">
             <div className="flex items-center justify-between">
@@ -1747,10 +1923,10 @@ const NewLocation = ({
           </MF>
         </MC>
 
-        {/* ── 4. 运营配置 ── */}
+        {/* ── 4. 运营配置（补货规则）── */}
         <MSec title="运营配置" />
         <MC>
-          <MF label="补货设置">
+          <MF label="补货设置" required>
             <div className="flex flex-wrap gap-2 mt-1">
               {WEEKDAYS.map((d) => (
                 <button
@@ -1773,7 +1949,7 @@ const NewLocation = ({
         {/* ── 5. 关联装机工单 ── */}
         <MSec title="关联装机工单" />
         <MC>
-          <MF label="是否同步安装申请">
+          <MF label="是否同步安装申请" required>
             <RadioGroup
               value={syncVal}
               options={["是", "否"]}
@@ -1785,16 +1961,6 @@ const NewLocation = ({
           </MF>
           {syncInstall && (
             <>
-              <div className="mx-0 my-2 px-0 py-2 bg-[#EFF6FF] -mx-4 px-4 flex items-start gap-2">
-                <Ic
-                  d={P.info}
-                  size={13}
-                  className="text-[#2563EB] flex-shrink-0 mt-0.5"
-                />
-                <span className="text-xs text-[#2563EB]">
-                  提交后将同步创建安装申请，由张主管统一审批。
-                </span>
-              </div>
               <MF label="设备型号" required>
                 <MSelect
                   placeholder="从设备型号字典选择"
@@ -2764,6 +2930,65 @@ const ApprovalDetail = ({
   const isPending = mode === "pending" && eff.status === "待审核";
   const [opinion, setOpinion] = useState("");
   const [showConfirm, setShowConfirm] = useState<"approve" | "reject" | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false); // 具体详情默认收起
+
+  // 具体详情：按申请类型展示提交的业务表单内容
+  const detailFields: { label: string; value: ReactNode }[] = (() => {
+    if (eff.type === "点位新增") return [
+      { label: "归属客户", value: eff.customer },
+      { label: "点位名称", value: eff.location },
+      { label: "点位地区", value: "广东省·深圳市·南山区" },
+      { label: "详细地址", value: "科技园北路12号蜂巢大厦1楼A区" },
+      { label: "经纬度", value: "113.944°E, 22.538°N" },
+      { label: "覆盖人数", value: "约 3,200 人" },
+      { label: "一级场景", value: "写字楼" },
+      { label: "二级场景", value: "商务茶水间" },
+      { label: "场地照片", value: (
+        <div className="flex gap-1.5 justify-end">
+          {["入口", "立面", "位置1"].map(t => (
+            <div key={t} className="w-12 h-12 rounded-[8px] bg-[#F5F7FA] border border-[#E2E8F0] flex items-center justify-center">
+              <span className="text-[10px] text-[#94A3B8]">{t}</span>
+            </div>
+          ))}
+        </div>
+      ) },
+      { label: "竞对智能售货机", value: "无" },
+      { label: "竞对传统售货机", value: "有" },
+      { label: "百米内便利店", value: "无" },
+      { label: "同步安装申请", value: <span className="text-[#2563EB]">是</span> },
+    ];
+    if (eff.type === "设备安装") return [
+      { label: "归属客户", value: eff.customer },
+      { label: "安装点位", value: eff.location },
+      { label: "设备型号", value: "智柜 Pro X8" },
+      { label: "设备数量", value: "2 台" },
+      { label: "设备安装位置", value: "大堂东侧靠窗" },
+      { label: "需求安装时间", value: "2025-09-15" },
+      { label: "是否定制外观", value: "是" },
+      { label: "是否需提前报备", value: "是" },
+      { label: "是否有电梯", value: "是" },
+      { label: "是否需户外棚", value: "否" },
+      { label: "其他要求备注", value: "需提前联系物业申请施工证" },
+    ];
+    if (eff.type === "客户新增") return [
+      { label: "客户名称", value: eff.customer },
+      { label: "客户类型", value: "企业" },
+      { label: "归属渠道", value: "自营" },
+      { label: "客户等级", value: "金牌" },
+      { label: "所在地区", value: "广东省·深圳市·福田区" },
+      { label: "详细地址", value: "福华三路 88 号 12 楼" },
+      { label: "联系人", value: "刘经理" },
+      { label: "联系电话", value: <span className="text-[#2563EB]">133-4444-0005</span> },
+      { label: "联系人身份", value: "采购总监" },
+      { label: "营业执照", value: (
+        <button className="flex items-center gap-1 text-[#2563EB] text-sm font-medium">
+          <Ic d={P.clip} size={13} />
+          营业执照_扫描件.pdf
+        </button>
+      ) },
+    ];
+    return [];
+  })();
 
   return (
     <div className="h-full flex flex-col bg-[#F5F7FA] relative">
@@ -2813,6 +3038,42 @@ const ApprovalDetail = ({
             </div>
           </div>
         </div>
+
+        {/* 具体详情（独立 card，默认收起） */}
+        {detailFields.length > 0 && (
+          <div className="mx-4 mb-3 bg-white rounded-[12px] px-4 py-4 shadow-[0_1px_4px_0_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-[#0F172A] flex items-center gap-2">
+                <span className="w-1 h-4 bg-[#2563EB] rounded-full inline-block" />
+                具体详情
+              </span>
+              <button
+                onClick={() => setDetailOpen(v => !v)}
+                className="flex items-center gap-1 text-xs text-[#2563EB] font-medium"
+              >
+                {detailOpen ? "收起" : "展开"}
+                <Ic d={P.chevD} size={12} className={`transition-transform ${detailOpen ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+            {detailOpen && eff.type !== "点位新增" && (
+              <div className="mt-3 pt-3 border-t border-[#F1F5F9] space-y-2.5">
+                {detailFields.map(row => (
+                  <div key={row.label} className="flex items-start justify-between text-sm gap-4">
+                    <span className="text-[#94A3B8] flex-shrink-0 w-28">{row.label}</span>
+                    <span className="text-[#0F172A] font-medium text-right flex-1">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 点位新增：展开后嵌入完整点位详情（含全部 tab）作为示例 */}
+        {detailOpen && eff.type === "点位新增" && (
+          <div className="mx-4 mb-3">
+            <LocationDetail embedded />
+          </div>
+        )}
 
         {/* Approved result card */}
         {eff.status === "审核通过" && (
