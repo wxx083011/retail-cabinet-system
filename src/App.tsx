@@ -549,35 +549,37 @@ const ORDERS = [
 type NavGroup = { label: string; items: { key: string; label: string; icon: string }[] };
 
 const OPS_NAV: NavGroup[] = [
-  { label: "核心业务", items: [
-    { key: "customer-list", label: "客户管理", icon: "customers" },
-    { key: "location-list", label: "点位管理", icon: "location" },
-    { key: "device-list", label: "设备台账", icon: "device" },
+  { label: "客户管理", items: [
+    { key: "customer-list", label: "客户列表", icon: "customers" },
+    { key: "location-list", label: "点位列表", icon: "location" },
   ]},
-  { label: "商品与库存", items: [
-    { key: "goods-cabinet-list", label: "智能柜商品库", icon: "layers" },
+  { label: "设备管理", items: [
+    { key: "device-list", label: "设备列表", icon: "device" },
+  ]},
+  { label: "智能柜管理", items: [
+    { key: "goods-cabinet-list", label: "智能柜列表", icon: "layers" },
     { key: "goods-restock-list", label: "补货单列表", icon: "order" },
   ]},
-  { label: "规则配置", items: [
-    { key: "rule-auto", label: "自动补货规则配置", icon: "rules" },
-    // { key: "rule-template", label: "预存量模板", icon: "layers" }, // 暂时隐藏，页面与路由保留
-  ]},
-  { label: "销售订单管理", items: [
-    { key: "retail-order-list",  label: "零售订单列表",   icon: "order"   },
-    { key: "retail-refund-list", label: "订单退款处理",   icon: "refresh" },
+  { label: "订单管理", items: [
+    { key: "retail-order-list",  label: "订单列表",     icon: "order"   },
+    { key: "retail-refund-list", label: "订单售后处理", icon: "refresh" },
     // { key: "retail-algo-list",   label: "算法异常单处理", icon: "alert"   }, // 暂时隐藏，页面与路由保留
+  ]},
+  { label: "规则配置", items: [
+    { key: "rule-auto", label: "自动补货规则", icon: "rules" },
+    // { key: "rule-template", label: "预存量模板", icon: "layers" }, // 暂时隐藏，页面与路由保留
   ]},
 ];
 
 const ERP_NAV: NavGroup[] = [
-  { label: "商品档案", items: [
+  { label: "商品管理", items: [
     { key: "erp-product-list", label: "商品档案", icon: "package" },
     // { key: "erp-price-list", label: "价格模板", icon: "tag" }, // 暂时隐藏，页面与路由保留
   ]},
-  { label: "供应商", items: [
-    { key: "erp-supplier-list", label: "供应商管理", icon: "customers" },
+  { label: "供应商管理", items: [
+    { key: "erp-supplier-list", label: "供应商列表", icon: "customers" },
   ]},
-  { label: "采购", items: [
+  { label: "采购管理", items: [
     { key: "erp-pm-list", label: "采购单", icon: "order" },
     { key: "erp-po-list", label: "采购入库单", icon: "inbox" },
     { key: "erp-exc-list", label: "入库异常单", icon: "alert" },
@@ -783,8 +785,8 @@ const CustomerList = ({ onDetail, onEdit }: { onDetail: () => void; onEdit: () =
   return (
     <div>
       <PageHeader
-        title="客户管理"
-        breadcrumbs={["首页", "核心业务", "客户管理"]}
+        title="客户列表"
+        breadcrumbs={["首页", "客户管理", "客户列表"]}
       />
       <FilterBar>
         <FilterField label="客户名称/编码"><Input placeholder="输入名称或编码搜索" icon="search" className="w-52" /></FilterField>
@@ -1653,7 +1655,7 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
     <div>
       <PageHeader
         title="编辑点位"
-        breadcrumbs={["首页", "点位管理", "编辑点位"]}
+        breadcrumbs={["首页", "客户管理", "编辑点位"]}
         actions={<><Btn variant="secondary" onClick={onBack}>取消</Btn><Btn variant="primary" onClick={handleSubmit}>提交</Btn></>}
       />
       <div className="space-y-4 max-w-4xl pb-12">
@@ -2070,7 +2072,7 @@ const LocDeviceTag = ({ status, lastOfflineAt }: { status: string; lastOfflineAt
 
 const LocationList = ({ onDetail, onEdit }: { onDetail: () => void; onEdit: () => void }) => (
   <div>
-    <PageHeader title="点位管理" breadcrumbs={["首页", "核心业务", "点位管理"]} />
+    <PageHeader title="点位列表" breadcrumbs={["首页", "客户管理", "点位列表"]} />
     <FilterBar>
       <FilterField label="点位名称/编码">
         <Input placeholder="名称或编码模糊搜索" icon="search" className="w-52" />
@@ -2671,7 +2673,7 @@ const LocationDetail = ({ onBack, onEdit }: { onBack: () => void; onEdit: () => 
   <div>
     <PageHeader
       title="深圳南山科技园 A3 栋大堂"
-      breadcrumbs={["首页", "点位管理", "点位详情"]}
+      breadcrumbs={["首页", "客户管理", "点位详情"]}
       actions={
         <>
           <Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回列表</Btn>
@@ -2705,8 +2707,8 @@ const DeviceList = ({ onDetail, onRemote }: { onDetail: () => void; onRemote: ()
   return (
     <div>
       <PageHeader
-        title="设备台账"
-        breadcrumbs={["首页", "核心业务", "设备台账"]}
+        title="设备列表"
+        breadcrumbs={["首页", "设备管理", "设备列表"]}
         actions={<Btn variant="secondary" icon="download">导出</Btn>}
       />
 
@@ -3009,7 +3011,7 @@ const DeviceDetail = ({ onBack, onRemote, onWorkOrderDetail }: { onBack: () => v
     <div>
       <PageHeader
         title="RC-2024-SZ-001"
-        breadcrumbs={["首页", "设备台账", "设备详情"]}
+        breadcrumbs={["首页", "设备管理", "设备详情"]}
         actions={
           <>
             <Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回列表</Btn>
@@ -3242,8 +3244,8 @@ const ProductList = ({ onAdd, onCopy, onBatchOff, onPreset, onRestock, onDetail 
   return (
     <div>
       <PageHeader
-        title="智能柜商品库"
-        breadcrumbs={["首页", "商品与库存", "商品库"]}
+        title="智能柜列表"
+        breadcrumbs={["首页", "智能柜管理", "智能柜列表"]}
         actions={
           <>
             <Btn variant="secondary" icon="copy" onClick={onCopy}>复制商品库</Btn>
@@ -3355,7 +3357,7 @@ const ProductAdd = ({ onBack }: { onBack: () => void }) => {
     <div>
       <PageHeader
         title="上架商品"
-        breadcrumbs={["首页", "商品库", "上架商品"]}
+        breadcrumbs={["首页", "智能柜管理", "上架商品"]}
         actions={<Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回列表</Btn>}
       />
       <Card>
@@ -3487,7 +3489,7 @@ const PresetPage = ({ onBack }: { onBack: () => void }) => (
   <div>
     <PageHeader
       title="批量设置预存量"
-      breadcrumbs={["首页", "商品库", "批量设置预存量"]}
+      breadcrumbs={["首页", "智能柜管理", "批量设置预存量"]}
       actions={<Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回</Btn>}
     />
     <AlertBanner type="info" msg="以下商品的预存量将统一更新到所选设备点位的补货计划中。修改后下次补货单生成时生效。" />
@@ -3545,7 +3547,7 @@ const RestockPage = ({ onBack }: { onBack: () => void }) => {
     <div>
       <PageHeader
         title="发起补货单"
-        breadcrumbs={["首页", "商品库", "发起补货单"]}
+        breadcrumbs={["首页", "智能柜管理", "发起补货单"]}
         actions={<Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回</Btn>}
       />
       <Card>
@@ -3645,7 +3647,7 @@ const OrderList = ({ onModify, onReturn }: { onModify: () => void; onReturn: () 
     <div>
       <PageHeader
         title="补货单列表"
-        breadcrumbs={["首页", "履约管理", "补货单"]}
+        breadcrumbs={["首页", "智能柜管理", "补货单列表"]}
         actions={<Btn variant="secondary" icon="download">导出</Btn>}
       />
       <div className="grid grid-cols-5 gap-3 mb-4">
@@ -3724,7 +3726,7 @@ const OrderModify = ({ onBack }: { onBack: () => void }) => (
   <div>
     <PageHeader
       title="修改补货单"
-      breadcrumbs={["首页", "补货单", "修改补货单"]}
+      breadcrumbs={["首页", "智能柜管理", "修改补货单"]}
       actions={<Btn variant="secondary" icon="chevronLeft" onClick={onBack}>返回</Btn>}
     />
     <div className="grid grid-cols-3 gap-4">
@@ -3857,8 +3859,8 @@ const RetailOrderList = ({ onDetail }: { onDetail: (id: string) => void }) => {
 
   return (
     <div>
-      <PageHeader title="零售订单列表"
-        breadcrumbs={["首页","销售订单管理","零售订单列表"]}
+      <PageHeader title="订单列表"
+        breadcrumbs={["首页","订单管理","订单列表"]}
         actions={<div className="flex items-center gap-2"><Btn variant="secondary" icon="download" size="sm">导出</Btn><Btn variant="secondary" icon="download" size="sm">导出订单商品明细</Btn></div>} />
 
       <FilterBar>
@@ -3997,7 +3999,7 @@ const RetailOrderDetail = ({ orderId, onBack }: { orderId: string; onBack: () =>
   return (
     <div>
       <PageHeader title="订单详情"
-        breadcrumbs={["首页","销售订单管理","零售订单列表","订单详情"]}
+        breadcrumbs={["首页","订单管理","订单列表","订单详情"]}
         actions={<>
           <Btn variant="secondary" onClick={onBack}>返回列表</Btn>
           {order.status !== "标记异常" && order.status !== "已取消" && (
@@ -4161,8 +4163,8 @@ const RetailRefundList = ({ onDetail, onProcess }: { onDetail: (no: string) => v
 
   return (
     <div>
-      <PageHeader title="订单退款处理"
-        breadcrumbs={["首页","销售订单管理","订单退款处理"]}
+      <PageHeader title="订单售后处理"
+        breadcrumbs={["首页","订单管理","订单售后处理"]}
         actions={<Btn variant="secondary" icon="download" size="sm">导出</Btn>} />
 
       <FilterBar>
@@ -4254,7 +4256,7 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
   return (
     <div>
       <PageHeader title={isPending ? "退款处理" : "退款详情"}
-        breadcrumbs={["首页","销售订单管理","订单退款处理", isPending?"退款处理":"退款详情"]}
+        breadcrumbs={["首页","订单管理","订单售后处理", isPending?"退款处理":"退款详情"]}
         actions={<Btn variant="secondary" onClick={onBack}>返回列表</Btn>} />
 
       <div className="space-y-4">
@@ -4431,7 +4433,7 @@ const RetailRefundDetail = ({ refundNo, onBack }: { refundNo: string; onBack: ()
 // ── 算法异常单处理（二期，占位）────────────────────────────────────────────────
 const RetailAlgoList = () => (
   <div>
-    <PageHeader title="算法异常单处理" breadcrumbs={["首页","销售订单管理","算法异常单处理"]} />
+    <PageHeader title="算法异常单处理" breadcrumbs={["首页","订单管理","算法异常单处理"]} />
     <div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
       <div className="w-20 h-20 rounded-2xl bg-[#F1F5F9] flex items-center justify-center">
         <Icon d={Icons.alert} size={36} className="text-[#94A3B8]" />

@@ -38,7 +38,7 @@ const SectionTitle = ({ title, action }: { title: string; action?: ReactNode }) 
 
 // ─── Location Detail ──────────────────────────────────────────────────────────
 type LocTab = "基本信息" | "运营数据" | "运营配置" | "设备信息" | "设备云" | "联系人信息" | "关联工单" | "商务合同" | "补货记录" | "审核状态";
-const LOC_TABS: LocTab[] = ["基本信息", "运营数据", "运营配置", "设备信息", "设备云", "联系人信息", "关联工单", "商务合同", "补货记录", "审核状态"];
+const LOC_TABS: LocTab[] = ["基本信息", "商务合同", "运营数据", "运营配置", "设备信息", "设备云", "联系人信息", "关联工单", "补货记录", "审核状态"];
 
 export const LocationDetailTabs = ({ extraAction }: { extraAction?: ReactNode }) => {
   const [tab, setTab] = useState<LocTab>("基本信息");

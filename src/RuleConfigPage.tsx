@@ -247,24 +247,45 @@ const Tbl = ({ cols, rows }: {
 );
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
+type AutoRuleDay = { day: string; orderTime: string; pushTime: string; threshold: number };
 type AutoRule = {
   id: string;
   code: string;
   scopeType: "仓库" | "点位零售柜";
   targets: string[];
-  weeks: string[];
-  orderTime: string;
-  pushTime: string;
-  threshold: number;
+  days: AutoRuleDay[];
   enabled: boolean;
 };
 
 const INIT_AUTO_RULES: AutoRule[] = [
-  { id: "1", code: "AR-2026-001", scopeType: "仓库", targets: ["深圳中心仓"], weeks: ["周一", "周三", "周五"], orderTime: "07:00", pushTime: "08:30", threshold: 20, enabled: true },
-  { id: "2", code: "AR-2026-002", scopeType: "仓库", targets: ["广州南沙仓"], weeks: ["周二", "周四"], orderTime: "08:00", pushTime: "09:30", threshold: 15, enabled: true },
-  { id: "3", code: "AR-2026-003", scopeType: "点位零售柜", targets: ["深圳科技园 A 区-001", "深圳科技园 B 区-002", "深圳科技园 C 区-003"], weeks: ["周一", "周二", "周三", "周四", "周五"], orderTime: "06:30", pushTime: "08:00", threshold: 10, enabled: true },
-  { id: "4", code: "AR-2026-004", scopeType: "点位零售柜", targets: ["广州天河城-001"], weeks: ["周六", "周日"], orderTime: "09:00", pushTime: "10:30", threshold: 25, enabled: false },
-  { id: "5", code: "AR-2026-005", scopeType: "仓库", targets: ["北京顺义仓"], weeks: ["周一", "周三", "周五", "周日"], orderTime: "07:30", pushTime: "09:00", threshold: 30, enabled: false },
+  // 整周统一：三天数值相同 → 列表折叠为单行
+  { id: "1", code: "AR-2026-001", scopeType: "仓库", targets: ["深圳中心仓"], enabled: true, days: [
+    { day: "周一", orderTime: "07:00", pushTime: "08:30", threshold: 20 },
+    { day: "周三", orderTime: "07:00", pushTime: "08:30", threshold: 20 },
+    { day: "周五", orderTime: "07:00", pushTime: "08:30", threshold: 20 },
+  ] },
+  // 各天出单/推送/阈值均不同 → 列表按天展开
+  { id: "2", code: "AR-2026-002", scopeType: "仓库", targets: ["广州南沙仓"], enabled: true, days: [
+    { day: "周二", orderTime: "08:00", pushTime: "09:30", threshold: 15 },
+    { day: "周四", orderTime: "08:30", pushTime: "10:00", threshold: 18 },
+  ] },
+  { id: "3", code: "AR-2026-003", scopeType: "点位零售柜", targets: ["深圳科技园 A 区-001", "深圳科技园 B 区-002", "深圳科技园 C 区-003"], enabled: true, days: [
+    { day: "周一", orderTime: "06:30", pushTime: "08:00", threshold: 10 },
+    { day: "周二", orderTime: "06:30", pushTime: "08:00", threshold: 10 },
+    { day: "周三", orderTime: "07:00", pushTime: "08:30", threshold: 12 },
+    { day: "周四", orderTime: "06:30", pushTime: "08:00", threshold: 10 },
+    { day: "周五", orderTime: "07:30", pushTime: "09:00", threshold: 15 },
+  ] },
+  { id: "4", code: "AR-2026-004", scopeType: "点位零售柜", targets: ["广州天河城-001"], enabled: false, days: [
+    { day: "周六", orderTime: "09:00", pushTime: "10:30", threshold: 25 },
+    { day: "周日", orderTime: "09:00", pushTime: "10:30", threshold: 25 },
+  ] },
+  { id: "5", code: "AR-2026-005", scopeType: "仓库", targets: ["北京顺义仓"], enabled: false, days: [
+    { day: "周一", orderTime: "07:30", pushTime: "09:00", threshold: 30 },
+    { day: "周三", orderTime: "07:30", pushTime: "09:00", threshold: 30 },
+    { day: "周五", orderTime: "08:00", pushTime: "09:30", threshold: 28 },
+    { day: "周日", orderTime: "08:30", pushTime: "10:00", threshold: 26 },
+  ] },
 ];
 
 type PauseRule = {
@@ -291,14 +312,45 @@ const LOCATIONS = ["深圳科技园 A 区-001", "深圳科技园 B 区-002", "�
 const WR_DAYS = ["周一","周二","周三","周四","周五","周六","周日"] as const;
 
 type WRDay = { enabled: boolean; orderTime: string; pushTime: string; threshold: string };
-type WarehouseRuleRow = { id: string; warehouses: string[]; days: WRDay[] };
+type EffectiveType = "永久" | "范围";
+type WarehouseRuleRow = { id: string; warehouses: string[]; days: WRDay[]; effectiveType: EffectiveType; effectiveStart: string; effectiveEnd: string };
 
 const makeWRDays = (): WRDay[] =>
   WR_DAYS.map(() => ({ enabled: false, orderTime: "09:00", pushTime: "10:00", threshold: "" }));
 
+// 生效时间：可选「永久有效」或「指定范围」（日期区间），仓库/点位两个规则表单共用
+const dateCls = "h-9 border border-[#D1D5DB] rounded-lg px-2.5 text-sm text-[#0F172A] bg-white focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#DBEAFE]";
+const EffectiveTimeField = ({
+  type, start, end, onType, onStart, onEnd,
+}: {
+  type: EffectiveType; start: string; end: string;
+  onType: (t: EffectiveType) => void; onStart: (v: string) => void; onEnd: (v: string) => void;
+}) => (
+  <div className="flex items-center gap-3">
+    <label className="text-sm text-[#374151] whitespace-nowrap w-[68px] flex-shrink-0">生效时间</label>
+    <div className="flex items-center gap-3">
+      <div className="inline-flex rounded-lg border border-[#D1D5DB] overflow-hidden">
+        {(["永久", "范围"] as const).map(t => (
+          <button key={t} type="button" onClick={() => onType(t)}
+            className={`h-9 px-4 text-sm transition-colors ${type === t ? "bg-[#2563EB] text-white" : "bg-white text-[#64748B] hover:bg-[#F8FAFC]"}`}>
+            {t === "永久" ? "永久有效" : "指定范围"}
+          </button>
+        ))}
+      </div>
+      {type === "范围" && (
+        <div className="flex items-center gap-1.5">
+          <input type="date" value={start} onChange={e => onStart(e.target.value)} className={dateCls} />
+          <span className="text-[#94A3B8]">—</span>
+          <input type="date" value={end} min={start || undefined} onChange={e => onEnd(e.target.value)} className={dateCls} />
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) => {
   const [rows, setRows] = useState<WarehouseRuleRow[]>([
-    { id: "1", warehouses: [], days: makeWRDays() },
+    { id: "1", warehouses: [], days: makeWRDays(), effectiveType: "永久", effectiveStart: "", effectiveEnd: "" },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
@@ -321,8 +373,11 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
       ? { ...r, days: r.days.map(d => ({ ...d, ...patch })) }
       : r));
 
+  const patchEffective = (id: string, patch: Partial<Pick<WarehouseRuleRow, "effectiveType" | "effectiveStart" | "effectiveEnd">>) =>
+    setRows(rs => rs.map(r => r.id === id ? { ...r, ...patch } : r));
+
   const addRow = () =>
-    setRows(rs => [...rs, { id: Date.now().toString(), warehouses: [], days: makeWRDays() }]);
+    setRows(rs => [...rs, { id: Date.now().toString(), warehouses: [], days: makeWRDays(), effectiveType: "永久", effectiveStart: "", effectiveEnd: "" }]);
 
   const removeRow = (id: string) =>
     setRows(rs => rs.filter(r => r.id !== id));
@@ -510,6 +565,14 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
                 })}
               </div>
               {errors[`${idx}-days`] && <p className="text-xs text-[#DC2626]">{errors[`${idx}-days`]}</p>}
+
+              {/* 生效时间 */}
+              <EffectiveTimeField
+                type={row.effectiveType} start={row.effectiveStart} end={row.effectiveEnd}
+                onType={t => patchEffective(row.id, { effectiveType: t })}
+                onStart={v => patchEffective(row.id, { effectiveStart: v })}
+                onEnd={v => patchEffective(row.id, { effectiveEnd: v })}
+              />
             </div>
           </div>
         ))}
@@ -540,11 +603,11 @@ const WarehouseRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmi
 };
 
 // ─── Location Rule Form ────────────────────────────────────────────────────────
-type LocationRuleRow = { id: string; locations: string[]; days: WRDay[] };
+type LocationRuleRow = { id: string; locations: string[]; days: WRDay[]; effectiveType: EffectiveType; effectiveStart: string; effectiveEnd: string };
 
 const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) => {
   const [rows, setRows] = useState<LocationRuleRow[]>([
-    { id: "1", locations: [], days: makeWRDays() },
+    { id: "1", locations: [], days: makeWRDays(), effectiveType: "永久", effectiveStart: "", effectiveEnd: "" },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
@@ -569,7 +632,10 @@ const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit
       : r));
 
   const addRow = () =>
-    setRows(rs => [...rs, { id: Date.now().toString(), locations: [], days: makeWRDays() }]);
+    setRows(rs => [...rs, { id: Date.now().toString(), locations: [], days: makeWRDays(), effectiveType: "永久", effectiveStart: "", effectiveEnd: "" }]);
+
+  const patchEffective = (id: string, patch: Partial<Pick<LocationRuleRow, "effectiveType" | "effectiveStart" | "effectiveEnd">>) =>
+    setRows(rs => rs.map(r => r.id === id ? { ...r, ...patch } : r));
 
   const removeRow = (id: string) =>
     setRows(rs => rs.filter(r => r.id !== id));
@@ -740,6 +806,14 @@ const LocationRuleForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit
                 })}
               </div>
               {errors[`${idx}-days`] && <p className="text-xs text-[#DC2626]">{errors[`${idx}-days`]}</p>}
+
+              {/* 生效时间 */}
+              <EffectiveTimeField
+                type={row.effectiveType} start={row.effectiveStart} end={row.effectiveEnd}
+                onType={t => patchEffective(row.id, { effectiveType: t })}
+                onStart={v => patchEffective(row.id, { effectiveStart: v })}
+                onEnd={v => patchEffective(row.id, { effectiveEnd: v })}
+              />
             </div>
           </div>
         ))}
@@ -1022,6 +1096,46 @@ const ConfigPauseModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+// 规则列表「适用周」列：一~日七个短标签方块，选中蓝底白字、未选灰底，宽度固定便于扫读
+const WeekChips = ({ weeks }: { weeks: string[] }) => (
+  <div className="flex items-center gap-1">
+    {["周一", "周二", "周三", "周四", "周五", "周六", "周日"].map(d => {
+      const on = weeks.includes(d);
+      return (
+        <span key={d} title={d}
+          className={`w-5 h-5 rounded text-xs flex items-center justify-center font-medium ${
+            on ? "bg-[#2563EB] text-white" : "bg-[#F1F5F9] text-[#CBD5E1]"
+          }`}>
+          {d.slice(1)}
+        </span>
+      );
+    })}
+  </div>
+);
+
+// 整条规则各天的出单/推送/阈值是否完全一致（一致则列表折叠为单行）
+const isRuleUnified = (r: AutoRule) =>
+  r.days.length > 0 && r.days.every(d =>
+    d.orderTime === r.days[0].orderTime && d.pushTime === r.days[0].pushTime && d.threshold === r.days[0].threshold);
+
+// 数值单元格：统一时单行；否则按天逐行展开，行序与「适用周」方块一致
+const RuleValueCell = ({ days, get, unified, mono = true }: {
+  days: AutoRuleDay[]; get: (d: AutoRuleDay) => string; unified: boolean; mono?: boolean;
+}) => {
+  const cls = `${mono ? "font-mono " : ""}text-sm text-[#334155]`;
+  if (unified) return <span className={cls}>{get(days[0])}</span>;
+  return (
+    <div className="flex flex-col gap-1">
+      {days.map(d => (
+        <div key={d.day} className="flex items-center gap-1.5">
+          <span className="text-[10px] text-[#94A3B8] w-3 shrink-0">{d.day.slice(1)}</span>
+          <span className={cls}>{get(d)}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // ─── Tab 1: Auto Restock Rules ────────────────────────────────────────────────
 const AutoRulesTab = () => {
   const [rules, setRules] = useState<AutoRule[]>(INIT_AUTO_RULES);
@@ -1058,14 +1172,14 @@ const AutoRulesTab = () => {
         : <span className="text-[#334155]">{r.targets[0]}</span>,
     },
     {
-      key: "weeks", label: "适用周",
-      render: (r: AutoRule) => <span className="text-sm text-[#334155]">{r.weeks.join("、")}</span>,
+      key: "weeks", label: "适用周（周一~周日）",
+      render: (r: AutoRule) => <WeekChips weeks={r.days.map(d => d.day)} />,
     },
-    { key: "orderTime", label: "出单时间", width: "w-24", render: (r: AutoRule) => <span className="font-mono text-sm text-[#334155]">{r.orderTime}</span> },
-    { key: "pushTime", label: "推送履约时间", width: "w-28", render: (r: AutoRule) => <span className="font-mono text-sm text-[#334155]">{r.pushTime}</span> },
+    { key: "orderTime", label: "出单时间", width: "w-28", render: (r: AutoRule) => <RuleValueCell days={r.days} unified={isRuleUnified(r)} get={d => d.orderTime} /> },
+    { key: "pushTime", label: "推送履约时间", width: "w-32", render: (r: AutoRule) => <RuleValueCell days={r.days} unified={isRuleUnified(r)} get={d => d.pushTime} /> },
     {
       key: "threshold", label: "最低缺货件数阈值", width: "w-36",
-      render: (r: AutoRule) => <span className="text-sm text-[#334155]">{r.threshold} 件</span>,
+      render: (r: AutoRule) => <RuleValueCell days={r.days} unified={isRuleUnified(r)} mono={false} get={d => `${d.threshold} 件`} />,
     },
     {
       key: "enabled", label: "状态", width: "w-24",

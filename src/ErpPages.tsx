@@ -3361,7 +3361,7 @@ export const SupplierList = ({ onEdit }: { onEdit: (id?: string) => void }) => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-[#E2E8F0] shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">供应商管理</h1>
+          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">供应商列表</h1>
           <p className="text-xs text-[#64748B] mt-0.5">
             用于管理所有供应商信息，支持搜索筛选、新增、修改、导出等操作
           </p>
@@ -3674,6 +3674,7 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
   const [phone, setPhone] = useState(isEdit ? "13802888001" : "");
   const [bankAccount, setBankAccount] = useState(isEdit ? "6222 0210 0122 8888 910" : "");
   const [bankName, setBankName] = useState(isEdit ? "招商银行深圳高新支行" : "");
+  const [cnapsCode, setCnapsCode] = useState(isEdit ? "308584000000" : ""); // 联行号（选填）
   const [contractFile, setContractFile] = useState(
     isEdit ? "可口可乐2024年框架协议.pdf" : "2024年度框架采购协议扫描件.pdf"
   );
@@ -3720,6 +3721,8 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
 
     if (!bankName.trim()) errs.bankName = "开户行为必填项";
     else if (bankName.trim().length > 50) errs.bankName = "开户行最长 50 字符";
+
+    if (cnapsCode.trim() && !/^\d{12}$/.test(cnapsCode.trim())) errs.cnapsCode = "联行号应为 12 位数字";
 
     if (remark.trim().length > 200) errs.remark = "备注最长 200 字符";
 
@@ -3920,6 +3923,30 @@ export const SupplierForm = ({ onBack, isEdit = false }: { onBack: () => void; i
               />
               {errors.bankName && <p className="text-[11px] text-[#DC2626] mt-0.5">{errors.bankName}</p>}
             </div>
+          </div>
+
+          {/* Row 1.5: 联行号（选填） */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-[#334155]">
+                  联行号 <span className="text-[#94A3B8] font-normal">(选填)</span>
+                </label>
+                <span className="text-[11px] text-[#94A3B8]">{cnapsCode.length} / 12字</span>
+              </div>
+              <input
+                type="text"
+                maxLength={12}
+                placeholder="请输入开户行联行号 (12 位数字)"
+                value={cnapsCode}
+                onChange={(e) => setCnapsCode(e.target.value.replace(/\D/g, ""))}
+                className={`w-full px-3 py-2 border font-mono rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2563EB] ${
+                  errors.cnapsCode ? "border-[#DC2626] bg-[#FEF2F2]" : "border-[#CBD5E1]"
+                }`}
+              />
+              {errors.cnapsCode && <p className="text-[11px] text-[#DC2626] mt-0.5">{errors.cnapsCode}</p>}
+            </div>
+            <div />
           </div>
 
           {/* Row 2: 合作状态, 结算方式 */}

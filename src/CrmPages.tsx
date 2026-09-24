@@ -1401,7 +1401,7 @@ const LocationDetail = ({
   const auditState = AUDIT_STATES[auditIdx]
 
   type TabKey = "基本信息" | "运营数据" | "运营配置" | "设备信息" | "联系人信息" | "关联工单" | "商务合同" | "补货列表" | "审核状态"
-  const TABS: TabKey[] = ["基本信息", "运营数据", "运营配置", "设备信息", "联系人信息", "关联工单", "商务合同", "补货列表", "审核状态"]
+  const TABS: TabKey[] = ["基本信息", "运营数据", "运营配置", "设备信息", "联系人信息", "关联工单", "补货列表",  "商务合同","审核状态"]
   const [activeTab, setActiveTab] = useState<TabKey>("基本信息")
   // 补货单详情（覆盖层）
   const [restockNo, setRestockNo] = useState<string | null>(null)

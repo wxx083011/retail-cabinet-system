@@ -1292,7 +1292,7 @@ export const DeliveryList = ({ onDetail }: { onDetail: () => void }) => {
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       <Btn variant="ghost" size="sm" onClick={onDetail}>详情</Btn>
-                      <Btn variant="ghost" size="sm" className="!text-[#D97706] hover:!bg-[#FFFBEB]" onClick={()=>setReassignOpen(true)}>重新分配</Btn>
+                      {/* <Btn variant="ghost" size="sm" className="!text-[#D97706] hover:!bg-[#FFFBEB]" onClick={()=>setReassignOpen(true)}>重新分配</Btn> */}
                     </div>
                   </td>
                 </tr>
@@ -2717,7 +2717,7 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
                       <Badge dot label={r.status} color="blue" />
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded border border-[#2563EB] transition-all">分配</button>
+                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
                     </td>
                   </tr>
                 ))}
@@ -2762,10 +2762,7 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
                       </div>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
-                        <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#EA580C] hover:bg-[#FFF7ED] rounded border border-transparent hover:border-[#FED7AA] transition-all">重新分配</button>
-                      </div>
+                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
                     </td>
                   </tr>
                 ))}
@@ -3090,7 +3087,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
           {/* Order pool tabs */}
           <div className="flex border-b border-[#E2E8F0] flex-shrink-0">
             {([["pending", "待分配", pending.length], ["dispatched", "已分配", dispatched.length]] as const).map(([k, l, n]) => (
-              <button key={k} onClick={() => setOrderTab(k)}
+              <button key={k} onClick={() => { setOrderTab(k); setSelectedOrders(new Set()); }}
                 className={`flex-1 flex items-center justify-center gap-1 py-2 text-xs font-medium border-b-2 transition-all
                   ${orderTab === k ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-[#64748B] hover:text-[#475569]"}`}>
                 {l} <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${orderTab === k ? "bg-[#EFF6FF] text-[#2563EB]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{n}</span>
@@ -3113,15 +3110,13 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
               const isMapHighlighted = selectedMapPts.has(order.id);
               return (
                 <div key={order.id}
-                  onClick={() => orderTab === "pending" && toggleOrder(order.id)}
-                  className={`mx-2 mb-1 rounded p-2 border transition-all ${orderTab === "pending" ? "cursor-pointer" : "cursor-default"}
+                  onClick={() => toggleOrder(order.id)}
+                  className={`mx-2 mb-1 rounded p-2 border transition-all cursor-pointer
                     ${isSelected ? "bg-[#EFF6FF] border-[#2563EB]" : isMapHighlighted ? "bg-[#F0FDF4] border-[#86EFAC]" : "bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#CBD5E1]"}`}>
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    {orderTab === "pending" && (
-                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]"}`}>
-                        {isSelected && <Ic d={P.check} size={9} className="text-white" />}
-                      </div>
-                    )}
+                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-[#2563EB] border-[#2563EB]" : "border-[#CBD5E1]"}`}>
+                      {isSelected && <Ic d={P.check} size={9} className="text-white" />}
+                    </div>
                     <div className="text-[11px] font-semibold text-[#0F172A] truncate flex-1">{order.siteName}</div>
                     <span className="text-[10px] font-semibold text-[#7C3AED] bg-[#F5F3FF] border border-[#DDD6FE] px-1.5 py-0.5 rounded-full flex-shrink-0">
                       {`第${(order.batch.slice(-1).charCodeAt(0) - 64)}批次`}
@@ -3147,7 +3142,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
           </div>
 
           {/* Action footer */}
-          {orderTab === "pending" && selectedOrders.size > 0 && (
+          {selectedOrders.size > 0 && (
             <div className="border-t border-[#E2E8F0] px-3 py-2 flex-shrink-0">
               <div className="flex justify-between text-xs text-[#64748B] mb-1.5">
                 <span>已选 <strong className="text-[#2563EB]">{selectedOrders.size}</strong> 单</span>
@@ -3155,7 +3150,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
               </div>
               <button onClick={() => setShowTripAssign(true)}
                 className="w-full h-8 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-medium rounded flex items-center justify-center gap-1.5 transition-colors">
-                <Ic d={P.truck} size={12} />分配师傅
+                <Ic d={P.truck} size={12} />{orderTab === "pending" ? "分配师傅" : "重新分配师傅"}
               </button>
               <button onClick={() => setSelectedOrders(new Set())} className="w-full h-6 text-[#94A3B8] hover:text-[#64748B] text-xs transition-colors mt-1">清除选择</button>
             </div>
@@ -3170,8 +3165,8 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
           {selectedOrders.size > 0 && <> / 合计 <strong className="text-[#2563EB]">{totalSelectedQty}</strong> 件</>}
         </div>
         <div className="flex gap-2">
-          <Btn variant="secondary" onClick={() => setSelectedOrders(new Set())} disabled={selectedOrders.size === 0}>取消排车</Btn>
-          <Btn variant="primary" onClick={() => setShowTripAssign(true)} disabled={selectedOrders.size === 0}>提交排车计划</Btn>
+          <Btn variant="secondary" onClick={() => setSelectedOrders(new Set())} disabled={selectedOrders.size === 0}>{orderTab === "dispatched" ? "取消选择" : "取消排车"}</Btn>
+          <Btn variant="primary" onClick={() => setShowTripAssign(true)} disabled={selectedOrders.size === 0}>{orderTab === "dispatched" ? "重新分配师傅" : "提交排车计划"}</Btn>
         </div>
       </div>
 
@@ -3195,7 +3190,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] flex-shrink-0">
                 <div>
-                  <h2 className="text-base font-bold text-[#0F172A]">分配师傅</h2>
+                  <h2 className="text-base font-bold text-[#0F172A]">{orderTab === "dispatched" ? "重新分配师傅" : "分配师傅"}</h2>
                   <p className="text-xs text-[#94A3B8] mt-0.5">已选 {selectedOrders.size} 单 · 合计 {totalSelectedQty} 件</p>
                 </div>
                 <button onClick={() => setShowTripAssign(false)} className="text-[#94A3B8] hover:text-[#334155]"><Ic d={P.x} size={16} /></button>
@@ -3235,6 +3230,12 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
                 </div>
               </div>
 
+              {orderTab === "dispatched" && (
+                <div className="mx-5 mt-3 flex items-start gap-3 p-3 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] text-xs text-[#92400E]">
+                  <Ic d={P.alert} size={14} className="text-[#D97706] mt-0.5 flex-shrink-0"/>
+                  <span>重新分配适用于师傅调班、车辆故障等场景。操作将立即通知原配送师傅，并向新配送师傅发送任务推送。</span>
+                </div>
+              )}
               {/* Driver list */}
               <div className="flex-1 overflow-y-auto p-5 space-y-2">
                 <div className="text-xs font-semibold text-[#64748B] uppercase mb-2">在班配送师傅</div>
@@ -3256,7 +3257,7 @@ export const DispatchWorkbench = ({ onBack }: { onBack: () => void }) => {
                         <span className={`font-semibold ${d.assignedQty > 0 ? "text-[#2563EB]" : "text-[#94A3B8]"}`}>{d.assignedQty} 件</span>
                       </div>
                     </div>
-                    <Btn variant="primary" size="sm" onClick={() => setShowTripAssign(false)}>分配</Btn>
+                    <Btn variant="primary" size="sm" onClick={() => setShowTripAssign(false)}>{orderTab === "dispatched" ? "重新分配" : "分配"}</Btn>
                   </div>
                 ))}
               </div>

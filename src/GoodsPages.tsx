@@ -399,11 +399,19 @@ type SkuRow = {
   realStock: number; onSaleStock: number; warehouseStock: number; onSaleDays: number; checked: boolean;
 };
 
+// 商品筛选用「分类」下拉选项（库存管理页与上架商品页共用），cat 映射到数据的 cat1
+const PRODUCT_CATEGORY_OPTIONS = [
+  { label: "全部", cat: "全部" },
+  { label: "饮品类", cat: "饮料" },
+  { label: "休闲零食", cat: "零食" },
+];
+
 function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () => void; onListProduct: () => void; onRestock: () => void }) {
   const [skus, setSkus] = useState<SkuRow[]>(SKU_LIST.map(s => ({ ...s, checked: false })));
   const [selLayer, setSelLayer] = useState<number | null>(null);
   const [skuSearch, setSkuSearch] = useState("");
   const [cat1, setCat1] = useState("全部");
+  const [filterCategory, setFilterCategory] = useState("全部");
   const [hasChanges, setHasChanges] = useState(false);
   const [delistModal, setDelistModal] = useState<SkuRow | null>(null);
   const [batchDelistModal, setBatchDelistModal] = useState(false);
@@ -416,7 +424,7 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
     return { layer: i + 1, total: ls.reduce((a, s) => a + s.realStock, 0), target: ls.reduce((a, s) => a + s.sugStock, 0), drink: ls.filter(s => s.cat1 === "饮料").reduce((a, s) => a + s.realStock, 0), drinkT: ls.filter(s => s.cat1 === "饮料").reduce((a, s) => a + s.sugStock, 0), snack: ls.filter(s => s.cat1 === "零食").reduce((a, s) => a + s.realStock, 0), snackT: ls.filter(s => s.cat1 === "零食").reduce((a, s) => a + s.sugStock, 0) };
   });
 
-  const filtered = skus.filter(s => (!selLayer || s.layer === selLayer) && (cat1 === "全部" || s.cat1 === cat1) && (!skuSearch || s.name.includes(skuSearch)));
+  const filtered = skus.filter(s => (!selLayer || s.layer === selLayer) && (filterCategory === "全部" || s.cat1 === PRODUCT_CATEGORY_OPTIONS.find(c => c.label === filterCategory)?.cat) && (cat1 === "全部" || s.cat1 === cat1) && (!skuSearch || s.name.includes(skuSearch)));
   const checkedCount = skus.filter(s => s.checked).length;
   const allChecked = filtered.length > 0 && filtered.every(s => s.checked);
 
@@ -505,6 +513,12 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
             <Inp value={skuSearch} onChange={setSkuSearch} placeholder="模糊搜索" className="w-40" />
           </div>
           <div>
+            <div className="text-xs text-[#64748B] mb-1">分类</div>
+            <Sel value={filterCategory} onChange={setFilterCategory} className="w-28">
+              {PRODUCT_CATEGORY_OPTIONS.map(o => <option key={o.label}>{o.label}</option>)}
+            </Sel>
+          </div>
+          <div>
             <div className="text-xs text-[#64748B] mb-1">一级类目</div>
             <Sel value={cat1} onChange={setCat1} className="w-28"><option>全部</option><option>饮料</option><option>零食</option></Sel>
           </div>
@@ -528,7 +542,7 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
           )}
           <div className="flex items-end gap-2 ml-auto">
             <Btn v="primary" icon={I.search} onClick={() => {}}>查询</Btn>
-            <Btn v="secondary" onClick={() => {}}>重置</Btn>
+            <Btn v="secondary" onClick={() => { setSkuSearch(""); setFilterCategory("全部"); setCat1("全部"); }}>重置</Btn>
           </div>
         </div>
         {/* 操作行 */}
@@ -683,6 +697,7 @@ function ListProductsPage({ onBack, onInventory, onRestock }: { onBack: () => vo
   const [filterCat1, setFilterCat1] = useState("全部");
   const [filterCat2, setFilterCat2] = useState("全部");
   const [filterTag, setFilterTag] = useState("全部");
+  const [filterCategory, setFilterCategory] = useState("全部");
   const [confirmModal, setConfirmModal] = useState(false);
   const [copyModal, setCopyModal] = useState(false);
   const [copyTarget, setCopyTarget] = useState("");
@@ -693,6 +708,7 @@ function ListProductsPage({ onBack, onInventory, onRestock }: { onBack: () => vo
 
   const filtered = skus.filter(s =>
     (!search || s.name.includes(search) || s.id.includes(search)) &&
+    (filterCategory === "全部" || s.cat1 === PRODUCT_CATEGORY_OPTIONS.find(c => c.label === filterCategory)?.cat) &&
     (filterCat1 === "全部" || s.cat1 === filterCat1) &&
     (filterCat2 === "全部" || s.cat2 === filterCat2) &&
     (filterTag === "全部" || s.tag === filterTag)
@@ -722,6 +738,11 @@ function ListProductsPage({ onBack, onInventory, onRestock }: { onBack: () => vo
       <Card className="mb-4 p-4">
         <div className="flex flex-wrap gap-3 items-center">
           <label className="flex items-center gap-1.5 text-sm text-[#64748B]">SKU名称/编码<Inp value={search} onChange={setSearch} placeholder="请输入" className="w-40" /></label>
+          <label className="flex items-center gap-1.5 text-sm text-[#64748B]">分类
+            <Sel value={filterCategory} onChange={setFilterCategory} className="w-28">
+              {PRODUCT_CATEGORY_OPTIONS.map(o => <option key={o.label}>{o.label}</option>)}
+            </Sel>
+          </label>
           <label className="flex items-center gap-1.5 text-sm text-[#64748B]">一级类目
             <Sel value={filterCat1} onChange={v => { setFilterCat1(v); setFilterCat2("全部"); }} className="w-28">
               {cat1Options.map(o => <option key={o}>{o}</option>)}
@@ -738,7 +759,7 @@ function ListProductsPage({ onBack, onInventory, onRestock }: { onBack: () => vo
             </Sel>
           </label>
           <Btn v="primary" icon={I.search}>搜索</Btn>
-          <Btn v="secondary" onClick={() => { setSearch(""); setFilterCat1("全部"); setFilterCat2("全部"); setFilterTag("全部"); }}>重置</Btn>
+          <Btn v="secondary" onClick={() => { setSearch(""); setFilterCategory("全部"); setFilterCat1("全部"); setFilterCat2("全部"); setFilterTag("全部"); }}>重置</Btn>
         </div>
       </Card>
       <Card>
