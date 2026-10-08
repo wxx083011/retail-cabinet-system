@@ -22,7 +22,9 @@ import {
   ListProductsPage, CreateRestockPage, RestockOrderList,
 } from "./GoodsPages";
 import { FulfillmentMiniApp } from "./FulfillmentMiniPages";
+import { FulfillmentMiniAppV2 } from "./FulfillmentMiniPagesV2";
 import { MiniProgramsApp, ClientMiniApp, ConsumerMiniApp } from "./MiniPrograms";
+import { ConsumerMiniAppV2 } from "./ConsumerMiniPagesV2";
 import { RuleConfigPage } from "./RuleConfigPage";
 import { LocationDetailTabs } from "./LocationDetailCore";
 
@@ -610,7 +612,7 @@ const FF_NAV: NavGroup[] = [
 ];
 
 // ─── System definitions ───────────────────────────────────────────────────────
-type SystemKey = "ops" | "erp" | "fulfillment" | "crm" | "ff-mini" | "client-mini" | "consumer-mini";
+type SystemKey = "ops" | "erp" | "fulfillment" | "crm" | "ff-mini" | "ff-mini-v2" | "client-mini" | "consumer-mini" | "consumer-mini-v2";
 
 const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; color: string; nav?: NavGroup[] }[] = [
   { key: "crm",         label: "销售 CRM",   sub: "销售CRM",    icon: "send",      color: "#F97316" },
@@ -618,8 +620,10 @@ const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; c
   { key: "erp",         label: "ERP 后台",   sub: "ERP后台",    icon: "package",   color: "#7C3AED", nav: ERP_NAV },
   { key: "fulfillment", label: "履约后台",   sub: "履约后台",   icon: "truck",     color: "#16A34A", nav: FF_NAV },
   { key: "ff-mini",      label: "履约小程序",  sub: "履约小程序", icon: "zap",       color: "#0891B2" },
+  { key: "ff-mini-v2",   label: "履约小程序V2", sub: "履约V2",    icon: "layers",    color: "#56A9FF" },
   { key: "client-mini",  label: "客户小程序",  sub: "客户小程序", icon: "customers", color: "#0D9488" },
   { key: "consumer-mini",label: "消费者小程序",sub: "消费者端",   icon: "send",      color: "#7C3AED" },
+  { key: "consumer-mini-v2", label: "消费者小程序V2", sub: "消费者V2", icon: "tag", color: "#56A9FF" },
 ];
 
 // ─── System Icon Bar (left, always visible) ───────────────────────────────────
@@ -656,7 +660,7 @@ const SystemBar = ({ active, onChange }: { active: SystemKey; onChange: (k: Syst
     <div className="mx-3 my-3 border-t border-white/15" />
     {/* Mini-program systems */}
     <nav className="flex flex-col items-center gap-1 px-2">
-      {SYSTEM_DEFS.filter(s => ["ff-mini","client-mini","consumer-mini"].includes(s.key)).map(s => {
+      {SYSTEM_DEFS.filter(s => ["ff-mini","ff-mini-v2","client-mini","consumer-mini","consumer-mini-v2"].includes(s.key)).map(s => {
         const isActive = active === s.key;
         return (
           <button key={s.key} onClick={() => onChange(s.key)}
@@ -4747,6 +4751,18 @@ export default function App() {
         <FulfillmentMiniApp />
       </div>
     );
+    if (system === "ff-mini-v2") return (
+      <div className="flex-1 overflow-auto p-8 bg-[#F5F7FA]">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full" style={{ background: "#56A9FF" }} />
+            <h2 className="text-xl font-bold text-[#0F172A]">履约执行小程序 V2</h2>
+          </div>
+          <p className="text-sm text-[#94A3B8] ml-6">闪购星蓝主题 · 仓储 · 分拣 · 配送 · 装机 · 任务执行端</p>
+        </div>
+        <FulfillmentMiniAppV2 />
+      </div>
+    );
     if (system === "client-mini") return (
       <div className="flex-1 overflow-auto p-8 bg-[#F5F7FA]">
         <div className="mb-6">
@@ -4769,6 +4785,18 @@ export default function App() {
           <p className="text-sm text-[#94A3B8] ml-6">扫码开柜 · 即取即付 · 订单退款</p>
         </div>
         <ConsumerMiniApp />
+      </div>
+    );
+    if (system === "consumer-mini-v2") return (
+      <div className="flex-1 overflow-auto p-8 bg-[#F5F7FA]">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full" style={{ background: "#56A9FF" }} />
+            <h2 className="text-xl font-bold text-[#0F172A]">消费者小程序 V2</h2>
+          </div>
+          <p className="text-sm text-[#94A3B8] ml-6">闪购星蓝主题 · 扫码开柜 · 即取即付 · 订单退款</p>
+        </div>
+        <ConsumerMiniAppV2 />
       </div>
     );
     return null;
