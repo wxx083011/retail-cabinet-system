@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# 打包 figmaUI 并同步产物到 repair-service-web/public/figma-ui/，
+# 最后把 index.html 中的绝对资源路径修正为相对路径（供 /figma-ui/ 子目录内嵌加载）。
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+TARGET="$ROOT/../repair-service-web/public/figma-ui"
+
+echo "==> pnpm build (figmaUI)"
+cd "$ROOT"
+pnpm run build
+
+echo "==> sync dist -> $TARGET"
+rm -rf "${TARGET:?}"/*
+cp -R "$ROOT/dist/." "$TARGET/"
+
+echo "==> rewrite asset paths to relative (./assets/)"
+sed -i '' 's#src="/assets/#src="./assets/#; s#href="/assets/#href="./assets/#' "$TARGET/index.html"
+
+echo "==> done:"
+find "$TARGET" -type f
