@@ -5676,7 +5676,7 @@ const IB_STATUS_COLOR: Record<IbStatus, BC> = {
 };
 
 type IbRow = {
-  id: string; poOrderNo: string; pmNo: string; supplier: string;
+  id: string; poOrderNo: string; supplier: string;
   warehouse: string; purchaseQty: number; actualQty: number;
   status: IbStatus; creator: string; createdAt: string;
 };
@@ -5687,17 +5687,17 @@ type IbLine = {
 };
 
 const IB_ROWS: IbRow[] = [
-  { id:"PIB-20250912-001", poOrderNo:"ORD-2025-0912-88", pmNo:"POM-20250910-001", supplier:"可口可乐（中国）饮料有限公司",
+  { id:"PIB-20250912-001", poOrderNo:"ORD-2025-0912-88", supplier:"可口可乐（中国）饮料有限公司",
     warehouse:"华南中心仓（深圳）", purchaseQty:2400, actualQty:2400, status:"已入库", creator:"王芳", createdAt:"2025-09-12 09:00" },
-  { id:"PIB-20250913-002", poOrderNo:"ORD-2025-0913-21", pmNo:"POM-20250910-002", supplier:"统一企业（中国）投资有限公司",
+  { id:"PIB-20250913-002", poOrderNo:"ORD-2025-0913-21", supplier:"统一企业（中国）投资有限公司",
     warehouse:"华南中心仓（深圳）", purchaseQty:1600, actualQty:900, status:"部分入库", creator:"王芳", createdAt:"2025-09-13 10:30" },
-  { id:"PIB-20250911-003", poOrderNo:"ORD-2025-0911-55", pmNo:"POM-20250907-005", supplier:"好丽友食品有限公司",
+  { id:"PIB-20250911-003", poOrderNo:"ORD-2025-0911-55", supplier:"好丽友食品有限公司",
     warehouse:"西南中心仓（成都）", purchaseQty:3600, actualQty:3600, status:"已入库", creator:"刘洋", createdAt:"2025-09-11 08:20" },
-  { id:"PIB-20250909-004", poOrderNo:"ORD-2025-0909-34", pmNo:"POM-20250904-008", supplier:"康师傅控股有限公司",
+  { id:"PIB-20250909-004", poOrderNo:"ORD-2025-0909-34", supplier:"康师傅控股有限公司",
     warehouse:"华北中心仓（北京）", purchaseQty:2400, actualQty:1800, status:"部分入库", creator:"张明", createdAt:"2025-09-09 14:00" },
-  { id:"PIB-20250916-005", poOrderNo:"ORD-2025-0916-09", pmNo:"POM-20250909-003", supplier:"农夫山泉股份有限公司",
+  { id:"PIB-20250916-005", poOrderNo:"ORD-2025-0916-09", supplier:"农夫山泉股份有限公司",
     warehouse:"华北中心仓（北京）", purchaseQty:1200, actualQty:0, status:"待入库", creator:"张明", createdAt:"2025-09-16 08:00" },
-  { id:"PIB-20250914-006", poOrderNo:"ORD-2025-0914-77", pmNo:"POM-20250908-004", supplier:"元气森林（北京）食品科技集团有限公司",
+  { id:"PIB-20250914-006", poOrderNo:"ORD-2025-0914-77", supplier:"元气森林（北京）食品科技集团有限公司",
     warehouse:"华东中心仓（上海）", purchaseQty:1000, actualQty:0, status:"待入库", creator:"陈晓", createdAt:"2025-09-14 11:15" },
 ];
 
@@ -5729,9 +5729,6 @@ export const InboundOrderList = ({ onDetail }: { onDetail:()=>void }) => {
           </FL>
           <FL label="关联采购订单号" width="160px">
             <Inp placeholder="输入订单号搜索" icon="search" className="w-40" />
-          </FL>
-          <FL label="采购单号" width="160px">
-            <Inp placeholder="输入采购单号" icon="search" className="w-40" />
           </FL>
           <FL label="采购供应商" width="176px">
             <Sel className="w-44" options={[
@@ -5781,7 +5778,6 @@ export const InboundOrderList = ({ onDetail }: { onDetail:()=>void }) => {
                 {[
                   { label:"采购入库单号",   align:"left",  w:"148px" },
                   { label:"关联采购订单号", align:"left",  w:"140px" },
-                  { label:"采购单号",       align:"left",  w:"140px" },
                   { label:"采购供应商",     align:"left",  w:"200px" },
                   { label:"收货仓库",       align:"left",  w:"160px" },
                   { label:"采购商品件数",   align:"right", w:"100px" },
@@ -5812,10 +5808,6 @@ export const InboundOrderList = ({ onDetail }: { onDetail:()=>void }) => {
                     <button className="font-mono text-xs text-[#2563EB] hover:underline hover:text-[#1D4ED8] flex items-center gap-0.5">
                       {r.poOrderNo}<Ic d={P.link} size={10}/>
                     </button>
-                  </td>
-                  {/* 采购单号 */}
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="font-mono text-xs text-[#64748B]">{r.pmNo}</span>
                   </td>
                   {/* 供应商 */}
                   <td className="px-4 py-3">
@@ -5880,8 +5872,6 @@ export const InboundOrderDetail = ({ onBack, onPOLink }: { onBack:()=>void; onPO
         actions={
           <>
             <Btn variant="secondary" icon="chevL" onClick={onBack}>返回列表</Btn>
-            <Btn variant="secondary" icon="print">打印</Btn>
-            <Btn variant="secondary" icon="download">导出 PDF</Btn>
           </>
         }
       />
@@ -6088,16 +6078,14 @@ export const InboundOrderDetail = ({ onBack, onPOLink }: { onBack:()=>void; onPO
 // PAGE 13 – 采购入库异常单管理
 // ══════════════════════════════════════════════════════════════════════════════
 
-type ExcStatus = "待处理" | "处理中" | "已处理" | "已关闭";
+type ExcStatus = "待处理" | "处理中" | "已处理";
 const EXC_STATUS_COLOR: Record<ExcStatus, BC> = {
   "待处理": "red",
   "处理中": "yellow",
   "已处理": "green",
-  "已关闭": "gray",
 };
 
 type DiffReason = "供应商少发" | "供应商多发" | "运输破损" | "质量问题拒收" | "规格不符" | "其他";
-const DIFF_REASONS: DiffReason[] = ["供应商少发","供应商多发","运输破损","质量问题拒收","规格不符","其他"];
 const DIFF_REASON_COLOR: Record<DiffReason, BC> = {
   "供应商少发":"orange","供应商多发":"purple","运输破损":"red",
   "质量问题拒收":"red","规格不符":"yellow","其他":"gray",
@@ -6125,7 +6113,7 @@ const EXC_ROWS: ExcRow[] = [
   { id:"EXC-20250907-004", pmNo:"POM-20250903-006", ibNo:"PIB-20250907-005",
     supplier:"百事食品（中国）有限公司", warehouse:"华东中心仓（上海）",
     purchaseQty:2160, actualQty:2220, diffQty:60,
-    diffReason:"供应商多发", status:"已关闭", creator:"陈晓", createdAt:"2025-09-07 11:00" },
+    diffReason:"供应商多发", status:"已处理", creator:"陈晓", createdAt:"2025-09-07 11:00" },
   { id:"EXC-20250906-005", pmNo:"POM-20250902-005", ibNo:"PIB-20250906-004",
     supplier:"好丽友食品有限公司", warehouse:"西南中心仓（成都）",
     purchaseQty:1200, actualQty:1150, diffQty:50,
@@ -6134,6 +6122,10 @@ const EXC_ROWS: ExcRow[] = [
     supplier:"元气森林（北京）食品科技集团有限公司", warehouse:"华东中心仓（上海）",
     purchaseQty:800, actualQty:760, diffQty:40,
     diffReason:"其他", status:"处理中", creator:"陈晓", createdAt:"2025-09-05 10:20" },
+  { id:"EXC-20250904-007", pmNo:"POM-20250902-010", ibNo:"PIB-20250904-007",
+    supplier:"光明乳业股份有限公司", warehouse:"华东中心仓（上海）",
+    purchaseQty:1500, actualQty:1650, diffQty:150,
+    diffReason:"供应商多发", status:"待处理", creator:"刘洋", createdAt:"2025-09-04 09:30" },
 ];
 
 type ExcLine = {
@@ -6149,6 +6141,8 @@ const EXC_LINES: ExcLine[] = [
     purchaseQty:600, actualQty:450, diffQty:150, diffReason:"供应商少发", remark:"供应商确认下批补发", hasAttach:true },
   { skuId:"SKU-DRINK-003", name:"统一绿茶 500ml", barcode:"6925303721543", spec:"15瓶/箱",
     purchaseQty:400, actualQty:150, diffQty:250, diffReason:"运输破损", remark:"箱体受损，拒收", hasAttach:true },
+  { skuId:"SKU-DRINK-009", name:"统一阿萨姆奶茶 500ml", barcode:"6925303721550", spec:"15瓶/箱",
+    purchaseQty:200, actualQty:210, diffQty:-10, diffReason:"供应商多发", remark:"", hasAttach:false },
 ];
 
 // ── LIST PAGE ─────────────────────────────────────────────────────────────────
@@ -6162,7 +6156,6 @@ export const ExceptionOrderList = ({
     "待处理": EXC_ROWS.filter(r=>r.status==="待处理").length,
     "处理中": EXC_ROWS.filter(r=>r.status==="处理中").length,
     "已处理": EXC_ROWS.filter(r=>r.status==="已处理").length,
-    "已关闭": EXC_ROWS.filter(r=>r.status==="已关闭").length,
   };
 
   const urgent = EXC_ROWS.filter(r=>r.status==="待处理").length;
@@ -6181,12 +6174,11 @@ export const ExceptionOrderList = ({
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-4 gap-3 mb-4">
         <Stat label="异常单总数" value={EXC_ROWS.length} color="#7C3AED" icon="fileText" />
         <Stat label="待处理" value={statusCounts["待处理"]} sub="需尽快跟进" color="#DC2626" icon="alertTri" />
         <Stat label="处理中" value={statusCounts["处理中"]} color="#D97706" icon="refresh" />
         <Stat label="已处理" value={statusCounts["已处理"]} color="#16A34A" icon="check" />
-        <Stat label="已关闭" value={statusCounts["已关闭"]} color="#64748B" icon="shield" />
       </div>
 
       {/* Urgent banner */}
@@ -6206,7 +6198,6 @@ export const ExceptionOrderList = ({
             { v:"待处理", label:"待处理" },
             { v:"处理中", label:"处理中" },
             { v:"已处理", label:"已处理" },
-            { v:"已关闭", label:"已关闭" },
           ].map(t=>(
             <button key={t.v} onClick={()=>setStatusFilter(t.v)}
               className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap flex-shrink-0
@@ -6253,7 +6244,6 @@ export const ExceptionOrderList = ({
               {label:"待处理",value:"pending"},
               {label:"处理中",value:"processing"},
               {label:"已处理",value:"done"},
-              {label:"已关闭",value:"closed"},
             ]} />
           </FL>
           <FL label="创建时间" width="220px">
@@ -6339,7 +6329,7 @@ export const ExceptionOrderList = ({
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <span className="inline-flex items-center justify-end gap-0.5 text-sm font-bold text-[#DC2626]">
                       <Ic d={P.alertTri} size={12}/>
-                      {r.diffQty > 0 ? "+" : ""}{(r.actualQty - r.purchaseQty < 0 ? "-" : "+")}{Math.abs(r.diffQty).toLocaleString()}
+                      {(r.actualQty - r.purchaseQty < 0 ? "-" : "+")}{Math.abs(r.diffQty).toLocaleString()}
                     </span>
                   </td>
                   {/* 差异原因 */}
@@ -6390,29 +6380,35 @@ export const ExceptionOrderHandle = ({
   const readOnly = false; // set true for detail-only view
 
   // Processing form state
-  const [diffReason, setDiffReason] = useState<DiffReason|"">("");
-  const [diffReasonOther, setDiffReasonOther] = useState("");
-  const [handleMethod, setHandleMethod] = useState<"补货"|"不补货"|"部分补货"|"">("");
-  const [restockQty, setRestockQty] = useState("");
+  const [handleMethod, setHandleMethod] = useState<"补货"|"不补货"|"部分补货"|"">("部分补货");
+  const [restockQtyBySku, setRestockQtyBySku] = useState<Record<string,string>>(
+    ()=>Object.fromEntries(EXC_LINES.map(l=>[l.skuId, l.diffQty<=0 ? "0" : "+"+l.diffQty])));
+  const [remarkBySku, setRemarkBySku] = useState<Record<string,string>>(
+    ()=>Object.fromEntries(EXC_LINES.map(l=>[l.skuId, l.remark])));
   const [remark, setRemark] = useState("");
-  const [attachFiles, setAttachFiles] = useState<string[]>(["沟通记录截图_20250913.jpg"]);
   const [errors, setErrors] = useState<Record<string,string>>({});
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [successInfo, setSuccessInfo] = useState<{method:string; newNo?:string}>({method:""});
 
   const needRestockQty = handleMethod==="补货" || handleMethod==="部分补货";
-  const totalDiff = EXC_LINES.reduce((s,l)=>s+l.diffQty, 0);
+  const signedDiffTotal = EXC_LINES.reduce((s,l)=>s-l.diffQty, 0);
+  const restockTotal = EXC_LINES.reduce((s,l)=>s+(parseInt(restockQtyBySku[l.skuId])||0), 0);
 
   const validate = () => {
     const e: Record<string,string> = {};
-    if (!diffReason) e.diffReason = "请选择差异原因";
-    if (diffReason==="其他" && !diffReasonOther.trim()) e.diffReasonOther = "选择【其他】时备注不能为空";
     if (!handleMethod) e.handleMethod = "请选择处理方式";
-    if (needRestockQty) {
-      const n = parseInt(restockQty);
-      if (!restockQty || isNaN(n) || n <= 0) e.restockQty = "请输入正整数补货数量";
-      else if (n > totalDiff) e.restockQty = `补货数量不能超过差异数量 ${totalDiff} 件`;
+    if (handleMethod==="部分补货") {
+      let nonzero = false;
+      EXC_LINES.forEach(l=>{
+        if (l.diffQty<=0) return;
+        const raw = restockQtyBySku[l.skuId] ?? "";
+        const n = parseInt(raw);
+        if (raw==="" || isNaN(n) || n < 0 || n > l.diffQty) e[`restock_${l.skuId}`] = `请输入 0 ~ ${l.diffQty} 的整数`;
+        else if (n !== 0) nonzero = true;
+      });
+      if (!Object.keys(e).some(k=>k.startsWith("restock_")) && !nonzero)
+        e.restockQty = "至少一行补货数量不为 0";
     }
     setErrors(e);
     return Object.keys(e).length===0;
@@ -6426,8 +6422,6 @@ export const ExceptionOrderHandle = ({
     setSuccessInfo({ method: handleMethod, newNo });
     setSubmitSuccess(true);
   };
-
-  const MOCK_ATTACH_NAMES = ["破损照片_箱体.jpg","破损照片_商品.jpg","验收记录单.pdf"];
 
   return (
     <div className="pb-6">
@@ -6449,10 +6443,6 @@ export const ExceptionOrderHandle = ({
             <div className="h-5 w-px bg-[#E2E8F0]"/>
             <h1 className="text-xl font-bold text-[#0F172A]">异常处理</h1>
             <Badge label={row.status} color={EXC_STATUS_COLOR[row.status]} dot />
-          </div>
-          <div className="flex items-center gap-2">
-            <Btn variant="secondary" icon="print" size="sm">打印</Btn>
-            <Btn variant="secondary" icon="download" size="sm">导出 PDF</Btn>
           </div>
         </div>
       </div>
@@ -6515,106 +6505,6 @@ export const ExceptionOrderHandle = ({
         </div>
       </Card>
 
-      {/* ── Section 2: Diff Lines ── */}
-      <Card noPad className="mb-4">
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-[#E2E8F0]">
-          <div className="w-1 h-4 bg-[#DC2626] rounded-full"/>
-          <h2 className="text-sm font-semibold text-[#0F172A]">差异商品明细</h2>
-          <span className="px-2 py-0.5 bg-[#FEF2F2] text-[#DC2626] text-xs font-semibold rounded-full border border-[#FECACA] ml-1">
-            {EXC_LINES.length} 种商品存在差异
-          </span>
-          <span className="ml-auto text-xs text-[#64748B]">
-            合计差异 <strong className="text-[#DC2626]">{totalDiff}</strong> 件
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                {[
-                  {label:"#",          align:"left",  w:"36px"},
-                  {label:"商品ID",     align:"left",  w:"140px"},
-                  {label:"商品名称",   align:"left",  w:"160px"},
-                  {label:"69码",       align:"left",  w:"128px"},
-                  {label:"规格",       align:"left",  w:"90px"},
-                  {label:"采购数量",   align:"right", w:"88px"},
-                  {label:"实际入库",   align:"right", w:"88px"},
-                  {label:"差异数量",   align:"right", w:"88px"},
-                  {label:"差异原因",   align:"left",  w:"108px"},
-                  {label:"差异备注",   align:"left",  w:"160px"},
-                  {label:"附件",       align:"left",  w:"80px"},
-                ].map(h=>(
-                  <th key={h.label} style={{minWidth:h.w}}
-                    className={`px-4 py-3 text-[11px] font-semibold text-[#64748B] uppercase tracking-wide whitespace-nowrap text-${h.align}`}>
-                    {h.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {EXC_LINES.map((l,i)=>(
-                <tr key={l.skuId} className="border-b border-[#F1F5F9] hover:bg-[#FFF8F8] transition-colors">
-                  <td className="px-4 py-3.5 text-xs text-[#94A3B8] font-medium">{i+1}</td>
-                  <td className="px-4 py-3.5"><span className="font-mono text-xs text-[#64748B]">{l.skuId}</span></td>
-                  <td className="px-4 py-3.5"><span className="font-medium text-[#0F172A]">{l.name}</span></td>
-                  <td className="px-4 py-3.5"><span className="font-mono text-xs text-[#64748B]">{l.barcode}</span></td>
-                  <td className="px-4 py-3.5"><span className="text-xs text-[#64748B]">{l.spec}</span></td>
-                  <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                    <span className="text-sm font-medium text-[#334155]">{l.purchaseQty}</span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                    <span className="text-sm font-medium text-[#D97706]">{l.actualQty}</span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                    <span className="text-sm font-bold text-[#DC2626]">-{l.diffQty}</span>
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <Badge label={l.diffReason} color={DIFF_REASON_COLOR[l.diffReason]} />
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span className="text-xs text-[#64748B]">{l.remark || <span className="text-[#CBD5E1]">—</span>}</span>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    {l.hasAttach
-                      ? <button className="flex items-center gap-1 text-xs text-[#2563EB] hover:underline">
-                          <Ic d={P.fileText} size={12}/>查看
-                        </button>
-                      : <span className="text-[#CBD5E1] text-xs">—</span>
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-[#FEF2F2] border-t-2 border-[#FECACA]">
-                <td colSpan={5} className="px-4 py-3 text-right text-xs font-semibold text-[#64748B] uppercase tracking-wide">合计</td>
-                <td className="px-4 py-3 text-right font-bold text-[#334155]">{EXC_LINES.reduce((s,l)=>s+l.purchaseQty,0)}</td>
-                <td className="px-4 py-3 text-right font-bold text-[#D97706]">{EXC_LINES.reduce((s,l)=>s+l.actualQty,0)}</td>
-                <td className="px-4 py-3 text-right font-bold text-[#DC2626]">-{totalDiff}</td>
-                <td colSpan={3}/>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        {/* Attach preview */}
-        <div className="px-5 py-4 border-t border-[#E2E8F0] bg-[#FAFBFC]">
-          <div className="text-xs font-semibold text-[#64748B] uppercase mb-2.5">入库现场附件</div>
-          <div className="flex gap-2 flex-wrap">
-            {MOCK_ATTACH_NAMES.map((f,i)=>(
-              <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#334155] hover:border-[#2563EB] cursor-pointer transition-colors">
-                <Ic d={f.endsWith(".pdf")?P.fileText:P.archive} size={13} className="text-[#7C3AED]"/>
-                <span>{f}</span>
-                <Btn variant="ghost" size="sm" className="!p-0 !h-auto !text-[#94A3B8] hover:!text-[#2563EB]">
-                  <Ic d={P.download} size={12}/>
-                </Btn>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-
       {/* ── Section 3: Processing Form ── */}
       <Card className="mb-4">
         <div className="flex items-center gap-2 pb-4 mb-5 border-b border-[#F1F5F9]">
@@ -6623,48 +6513,8 @@ export const ExceptionOrderHandle = ({
           <span className="ml-2 text-xs text-[#94A3B8]">请根据与供应商沟通结果填写处理决定</span>
         </div>
 
-        <div className="max-w-2xl space-y-6">
-          {/* 确定差异原因 */}
-          <div>
-            <label className="block text-xs font-medium text-[#64748B] mb-2">
-              <span className="text-[#DC2626] mr-0.5">*</span>确定差异原因
-            </label>
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              {DIFF_REASONS.map(r=>(
-                <label key={r}
-                  className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg cursor-pointer transition-all text-sm
-                    ${diffReason===r
-                      ? "border-[#7C3AED] bg-[#F5F3FF] text-[#7C3AED] font-medium"
-                      : "border-[#E2E8F0] text-[#334155] hover:border-[#7C3AED] hover:bg-[#FAFAFF]"}`}>
-                  <input type="radio" name="diffReason" value={r} checked={diffReason===r}
-                    onChange={()=>{ setDiffReason(r); setErrors(e=>({...e,diffReason:"",diffReasonOther:""})); }}
-                    className="accent-[#7C3AED]"/>
-                  {r}
-                </label>
-              ))}
-            </div>
-            {errors.diffReason && (
-              <p className="text-xs text-[#DC2626] flex items-center gap-1 mt-1"><Ic d={P.alertTri} size={11}/>{errors.diffReason}</p>
-            )}
-            {diffReason==="其他" && (
-              <div className="mt-2">
-                <textarea
-                  value={diffReasonOther}
-                  onChange={e=>{ setDiffReasonOther(e.target.value); setErrors(er=>({...er,diffReasonOther:""})); }}
-                  placeholder="请说明具体差异原因（选择【其他】时必填）"
-                  rows={2}
-                  className={`w-full border rounded-md text-sm px-3 py-2 text-[#334155] placeholder-[#94A3B8] resize-none
-                    focus:outline-none focus:ring-2 transition-all
-                    ${errors.diffReasonOther?"border-[#DC2626] focus:border-[#DC2626] focus:ring-[#FEE2E2]":"border-[#E2E8F0] focus:border-[#7C3AED] focus:ring-[#EDE9FE]"}`}
-                />
-                {errors.diffReasonOther && (
-                  <p className="text-xs text-[#DC2626] flex items-center gap-1 mt-1"><Ic d={P.alertTri} size={11}/>{errors.diffReasonOther}</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* 处理方式 */}
+        <div className="w-full space-y-6">
+          {/* 处理方式 — 默认展示 */}
           <div>
             <label className="block text-xs font-medium text-[#64748B] mb-2">
               <span className="text-[#DC2626] mr-0.5">*</span>处理方式
@@ -6679,7 +6529,11 @@ export const ExceptionOrderHandle = ({
                         : "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]"
                       : "border-[#E2E8F0] text-[#334155] hover:border-[#CBD5E1]"}`}>
                   <input type="radio" name="handleMethod" value={m} checked={handleMethod===m}
-                    onChange={()=>{ setHandleMethod(m); setErrors(e=>({...e,handleMethod:"",restockQty:""})); setRestockQty(""); }}
+                    onChange={()=>{
+                      setHandleMethod(m);
+                      setErrors(e=>({...e,handleMethod:"",restockQty:""}));
+                      setRestockQtyBySku(Object.fromEntries(EXC_LINES.map(l=>[l.skuId, (m==="不补货" || l.diffQty<=0) ? "0" : "+"+l.diffQty])));
+                    }}
                     className="accent-[#2563EB]"/>
                   <div>
                     <div className="text-sm font-semibold">{m}</div>
@@ -6697,41 +6551,124 @@ export const ExceptionOrderHandle = ({
             )}
           </div>
 
-          {/* 补货数量 — conditional */}
-          {needRestockQty && (
+          {/* 补货明细 — 按处理方式带出差异商品明细（字段与上方一致） */}
+          {handleMethod && (
             <div>
               <label className="block text-xs font-medium text-[#64748B] mb-1.5">
-                <span className="text-[#DC2626] mr-0.5">*</span>补货数量
-                <span className="ml-2 text-[#94A3B8] font-normal">（最多 {totalDiff} 件，即总差异数量）</span>
+                <span className="text-[#DC2626] mr-0.5">*</span>补货商品明细
+                <span className="ml-2 text-[#94A3B8] font-normal">
+                  {handleMethod==="部分补货" ? "（逐行可修改数量或归 0，差异备注选填）"
+                    : handleMethod==="补货" ? "（数量按差异件数回填，不可编辑，差异备注选填）"
+                    : "（补货数量为 0，不可编辑，差异备注选填）"}
+                </span>
               </label>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 max-w-[200px]">
-                  <input
-                    type="number" min="1" max={totalDiff}
-                    value={restockQty}
-                    onChange={e=>{ setRestockQty(e.target.value); setErrors(er=>({...er,restockQty:""})); }}
-                    placeholder={`1 ~ ${totalDiff}`}
-                    className={`w-full h-9 border rounded-md text-sm px-3 text-right font-semibold text-[#0F172A]
-                      focus:outline-none focus:ring-2 transition-all
-                      ${errors.restockQty?"border-[#DC2626] focus:border-[#DC2626] focus:ring-[#FEE2E2]":"border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#DBEAFE]"}`}
-                  />
-                  {errors.restockQty && (
-                    <p className="text-xs text-[#DC2626] flex items-center gap-1 mt-1"><Ic d={P.alertTri} size={11}/>{errors.restockQty}</p>
-                  )}
+              <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                        {[
+                          {label:"#",        align:"left",  w:"36px"},
+                          {label:"商品ID",   align:"left",  w:"130px"},
+                          {label:"商品名称", align:"left",  w:"150px"},
+                          {label:"69码",     align:"left",  w:"120px"},
+                          {label:"规格",     align:"left",  w:"80px"},
+                          {label:"采购数量", align:"right", w:"80px"},
+                          {label:"实际入库", align:"right", w:"80px"},
+                          {label:"差异数量", align:"right", w:"80px"},
+                          {label:"补货数量（件）", align:"right", w:"150px"},
+                          {label:"差异备注", align:"left",  w:"150px"},
+                        ].map(h=>(
+                          <th key={h.label} style={{minWidth:h.w}}
+                            className={`px-4 py-2.5 text-[11px] font-semibold text-[#64748B] uppercase tracking-wide whitespace-nowrap text-${h.align}`}>
+                            {h.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {EXC_LINES.map((l,i)=>(
+                        <tr key={l.skuId} className="border-b border-[#F1F5F9] hover:bg-[#FAFBFC] transition-colors">
+                          <td className="px-4 py-2.5 text-xs text-[#94A3B8] font-medium">{i+1}</td>
+                          <td className="px-4 py-2.5"><span className="font-mono text-xs text-[#64748B]">{l.skuId}</span></td>
+                          <td className="px-4 py-2.5"><span className="font-medium text-[#0F172A]">{l.name}</span></td>
+                          <td className="px-4 py-2.5"><span className="font-mono text-xs text-[#64748B]">{l.barcode}</span></td>
+                          <td className="px-4 py-2.5"><span className="text-xs text-[#64748B]">{l.spec}</span></td>
+                          <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                            <span className="text-sm font-medium text-[#334155]">{l.purchaseQty}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                            <span className="text-sm font-medium text-[#D97706]">{l.actualQty}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                            <span className={`text-sm font-bold ${l.diffQty<0?"text-[#16A34A]":"text-[#DC2626]"}`}>{l.diffQty<0?"+":"-"}{Math.abs(l.diffQty)}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <input
+                                type="text" inputMode="numeric"
+                                disabled={handleMethod!=="部分补货" || l.diffQty<=0}
+                                value={restockQtyBySku[l.skuId] ?? ""}
+                                onChange={e=>{
+                                  const v = e.target.value;
+                                  setRestockQtyBySku(m=>({...m,[l.skuId]:v}));
+                                  setErrors(er=>({...er,restockQty:"",[`restock_${l.skuId}`]:""}));
+                                }}
+                                className={`w-20 h-8 border rounded-md text-sm px-2 text-right font-semibold
+                                  focus:outline-none focus:ring-2 transition-all
+                                  ${handleMethod!=="部分补货" || l.diffQty<=0 ? "bg-[#F8FAFC] text-[#94A3B8] cursor-not-allowed border-[#E2E8F0]"
+                                    : errors[`restock_${l.skuId}`] ? "text-[#DC2626] border-[#DC2626] focus:border-[#DC2626] focus:ring-[#FEE2E2]"
+                                    : "text-[#0F172A] border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#DBEAFE]"}`}
+                              />
+                              {handleMethod==="部分补货" && l.diffQty>0 && (
+                                <button
+                                  onClick={()=>{ setRestockQtyBySku(m=>({...m,[l.skuId]:"0"})); setErrors(er=>({...er,restockQty:"",[`restock_${l.skuId}`]:""})); }}
+                                  className="px-1.5 h-8 text-xs text-[#64748B] border border-[#E2E8F0] rounded-md hover:text-[#DC2626] hover:border-[#FECACA] whitespace-nowrap transition-colors">
+                                  归0
+                                </button>
+                              )}
+                            </div>
+                            {errors[`restock_${l.skuId}`] && (
+                              <p className="text-xs text-[#DC2626] mt-1 text-right">{errors[`restock_${l.skuId}`]}</p>
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <input
+                              value={remarkBySku[l.skuId] ?? ""}
+                              onChange={e=>setRemarkBySku(m=>({...m,[l.skuId]:e.target.value}))}
+                              placeholder="选填"
+                              className="w-36 h-8 border border-[#E2E8F0] rounded-md text-xs px-2 text-[#334155] placeholder-[#CBD5E1] focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#DBEAFE]"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-[#F8FAFC] border-t border-[#E2E8F0]">
+                        <td colSpan={5} className="px-4 py-2.5 text-right text-sm font-medium text-[#64748B]">合计</td>
+                        <td className="px-4 py-2.5 text-right text-sm font-bold text-[#334155] whitespace-nowrap">{EXC_LINES.reduce((s,l)=>s+l.purchaseQty,0)}</td>
+                        <td className="px-4 py-2.5 text-right text-sm font-bold text-[#D97706] whitespace-nowrap">{EXC_LINES.reduce((s,l)=>s+l.actualQty,0)}</td>
+                        <td className={`px-4 py-2.5 text-right text-sm font-bold whitespace-nowrap ${signedDiffTotal<0?"text-[#DC2626]":"text-[#16A34A]"}`}>{signedDiffTotal<0?"-":"+"}{Math.abs(signedDiffTotal)}</td>
+                        <td className="px-4 py-2.5 text-right text-sm font-bold text-[#2563EB] whitespace-nowrap">{restockTotal>0?"+":""}{restockTotal} 件</td>
+                        <td colSpan={1}/>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
-                <span className="text-sm text-[#64748B]">件</span>
-                {handleMethod==="补货" && (
-                  <button
-                    onClick={()=>{ setRestockQty(String(totalDiff)); setErrors(er=>({...er,restockQty:""})); }}
-                    className="text-xs text-[#2563EB] hover:underline">
-                    填入全部差异数量（{totalDiff} 件）
-                  </button>
-                )}
               </div>
-              <div className="mt-2 flex items-start gap-2 p-2.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg text-xs text-[#1D4ED8]">
-                <Ic d={P.info} size={13} className="flex-shrink-0 mt-0.5"/>
-                <span>提交后系统将自动创建采购入库单并推送至履约系统；仓库完成收货后，对应采购单自动标记为已完成。</span>
+              <div className="mt-2 flex items-center gap-4 text-xs text-[#64748B]">
+                <span>{EXC_LINES.length} 种商品</span>
+                <span>补货总件数：<strong className="text-[#2563EB]">{restockTotal>0?"+":""}{restockTotal} 件</strong></span>
               </div>
+              {errors.restockQty && (
+                <p className="text-xs text-[#DC2626] flex items-center gap-1 mt-1.5"><Ic d={P.alertTri} size={11}/>{errors.restockQty}</p>
+              )}
+              {needRestockQty && (
+                <div className="mt-2 flex items-start gap-2 p-2.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg text-xs text-[#1D4ED8]">
+                  <Ic d={P.info} size={13} className="flex-shrink-0 mt-0.5"/>
+                  <span>提交后系统将自动创建采购入库单并推送至履约系统；仓库完成收货后，对应采购单自动标记为已完成。</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -6757,37 +6694,6 @@ export const ExceptionOrderHandle = ({
               className="w-full border border-[#E2E8F0] rounded-md text-sm px-3 py-2 text-[#334155] placeholder-[#94A3B8] resize-none focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#DBEAFE]"
             />
             <div className="text-right text-xs text-[#94A3B8] mt-0.5">{remark.length}/200</div>
-          </div>
-
-          {/* 附件上传 */}
-          <div>
-            <label className="block text-xs font-medium text-[#64748B] mb-1.5">
-              处理附件
-              <span className="ml-1 text-[#94A3B8] font-normal">（沟通截图、确认函等，选填）</span>
-            </label>
-            {attachFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {attachFiles.map((f,i)=>(
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-xs text-[#334155]">
-                    <Ic d={P.fileText} size={12} className="text-[#7C3AED]"/>
-                    <span>{f}</span>
-                    <button onClick={()=>setAttachFiles(a=>a.filter((_,j)=>j!==i))} className="text-[#94A3B8] hover:text-[#DC2626] ml-1">
-                      <Ic d={P.x} size={11}/>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="border-2 border-dashed border-[#E2E8F0] rounded-lg p-5 flex items-center gap-4 hover:border-[#7C3AED] cursor-pointer transition-colors group"
-              onClick={()=>setAttachFiles(a=>[...a,"新附件_"+(a.length+1)+".jpg"])}>
-              <div className="w-10 h-10 rounded-lg bg-[#F5F3FF] border border-[#DDD6FE] flex items-center justify-center flex-shrink-0 group-hover:bg-[#EDE9FE]">
-                <Ic d={P.upload} size={18} className="text-[#7C3AED]"/>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-[#334155]">点击上传附件</div>
-                <div className="text-xs text-[#94A3B8] mt-0.5">支持 JPG / PNG / PDF，单文件 ≤ 20MB</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -6843,10 +6749,6 @@ export const ExceptionOrderHandle = ({
                 <div className="flex justify-between px-4 py-3 text-sm">
                   <span className="text-[#94A3B8]">差异单号</span>
                   <span className="font-mono font-semibold text-[#334155]">{row.id}</span>
-                </div>
-                <div className="flex justify-between px-4 py-3 text-sm">
-                  <span className="text-[#94A3B8]">差异原因</span>
-                  <Badge label={diffReason || "—"} color={diffReason ? DIFF_REASON_COLOR[diffReason as DiffReason] : "gray"} />
                 </div>
                 <div className="flex justify-between px-4 py-3 text-sm">
                   <span className="text-[#94A3B8]">处理方式</span>
