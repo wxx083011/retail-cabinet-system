@@ -607,9 +607,20 @@ const DV_STOPS = [
 ];
 
 const INSTALL_ORDERS = [
-  { id: "WO-2509-015", siteCode: "SITE-SZ-088", loc: "蜂巢·科技园北楼1F", addr: "广东省深圳市南山区科技园北区北楼1F", lat: "22.5401", lng: "113.9523", model: "智柜 Pro X8", cabinetCode: "CB-2026-0088", qty: 1, tech: "陈刚", status: "待装机", demandDate: "2026-09-14 17:00", contact: "张主任", phone: "138-8888-0001", note: "门禁需联系物业，物业联系人：李主任，进场前提前30分钟通知", installLocation: "大堂右侧自动门旁，距墙50cm，需固定底座" },
-  { id: "WO-2509-016", siteCode: "SITE-SZ-089", loc: "天利中央广场B3-12",   addr: "广东省深圳市南山区天利中央广场B3-12",    lat: "22.5312", lng: "113.9388", model: "智柜 Max X12", cabinetCode: "CB-2026-0089", qty: 2, tech: "陈刚", status: "处理中",  demandDate: "2026-09-14 17:00", contact: "陈主任", phone: "139-7777-0002", note: "B3层货梯限重800kg，设备需拆分搬运，现场已确认电源位置", installLocation: "B3层中央通道北侧，紧邻电梯厅，已预留220V电源" },
-  { id: "WO-2509-012", siteCode: "SITE-SZ-045", loc: "皇庭广场1F-A5",        addr: "广东省深圳市福田区华强北皇庭广场1F-A5", lat: "22.5454", lng: "114.0878", model: "智柜 Pro X8", cabinetCode: "CB-2026-0045", qty: 1, tech: "陈刚", status: "已装机",  demandDate: "2026-09-13 16:00", contact: "李经理", phone: "136-6666-0003", note: "装机已完成，设备运行正常，客户已签字验收", installLocation: "1F-A5铺位门口左侧，已安装固定支架" },
+  { id: "WO-2509-015", siteCode: "SITE-SZ-088", loc: "蜂巢·科技园北楼1F", addr: "广东省深圳市南山区科技园北区北楼1F", lat: "22.5401", lng: "113.9523", model: "智柜 Pro X8", cabinetCode: "CB-2026-0088", qty: 1, tech: "陈刚", status: "待装机", demandDate: "2026-09-14 17:00", contact: "张主任", phone: "138-8888-0001", note: "门禁需联系物业，物业联系人：李主任，进场前提前30分钟通知", installLocation: "大堂右侧自动门旁，距墙50cm，需固定底座", completion: null },
+  { id: "WO-2509-016", siteCode: "SITE-SZ-089", loc: "天利中央广场B3-12",   addr: "广东省深圳市南山区天利中央广场B3-12",    lat: "22.5312", lng: "113.9388", model: "智柜 Max X12", cabinetCode: "CB-2026-0089", qty: 2, tech: "陈刚", status: "处理中",  demandDate: "2026-09-14 17:00", contact: "陈主任", phone: "139-7777-0002", note: "B3层货梯限重800kg，设备需拆分搬运，现场已确认电源位置", installLocation: "B3层中央通道北侧，紧邻电梯厅，已预留220V电源", completion: null },
+  {
+    id: "WO-2509-012", siteCode: "SITE-SZ-045", loc: "皇庭广场1F-A5", addr: "广东省深圳市福田区华强北皇庭广场1F-A5", lat: "22.5454", lng: "114.0878", model: "智柜 Pro X8", cabinetCode: "CB-2026-0045", qty: 1, tech: "陈刚", status: "已装机", demandDate: "2026-09-13 16:00", contact: "李经理", phone: "136-6666-0003", note: "装机已完成，设备运行正常，客户已签字验收", installLocation: "1F-A5铺位门口左侧，已安装固定支架",
+    completion: {
+      assetCodes: ["YQSL121028018201820182"],
+      remark: "设备已安装并完成通电测试，现场运行正常。",
+      photos: [
+        { label: "整体环境", url: "https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=bright%20modern%20shopping%20mall%20vending%20cabinet%20installation%20site%2C%20wide%20environment%20photo%2C%20realistic%20commercial%20lighting%2C%20no%20people%2C%20professional%20documentation&image_size=square" },
+        { label: "设备正面", url: "https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=front%20view%20of%20a%20smart%20vending%20cabinet%20installed%20in%20a%20clean%20shopping%20mall%2C%20realistic%20installation%20inspection%20photo%2C%20no%20people&image_size=square" },
+        { label: "电源连接", url: "https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=close%20up%20of%20professional%20power%20connection%20behind%20a%20smart%20vending%20cabinet%2C%20clean%20cable%20management%2C%20realistic%20installation%20documentation%20photo&image_size=square" },
+      ],
+    },
+  },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2948,6 +2959,7 @@ const InstallWODetail = ({ orderId, onBack, onAccept, onProcess, onSuccess }: {
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelled, setCancelled] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<null | { label: string; url: string }>(null);
 
   const statusColor = (s: string) => {
     if (s === "待装机") return "orange";
@@ -3038,6 +3050,44 @@ const InstallWODetail = ({ orderId, onBack, onAccept, onProcess, onSuccess }: {
           </div>
         </div>
 
+        {order.status === "已装机" && order.completion && (
+          <div className="bg-white mx-4 mt-3 rounded-2xl overflow-hidden shadow-[0_2px_12px_0_rgba(37,99,235,0.10)]">
+            <div className="px-4 pt-4 pb-3 border-b border-[#EEF4FB]">
+              <span className="text-xs font-semibold text-[#5B6B84]">安装提交</span>
+            </div>
+            <div className="px-4 py-3 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#8A9BB4]">资产编码</span>
+                <div className="flex flex-col items-end gap-1">
+                  {order.completion.assetCodes.map((assetCode) => (
+                    <span key={assetCode} className="font-mono text-xs font-semibold text-[#10233F]">{assetCode}</span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[#8A9BB4] mb-1.5">安装备注</div>
+                <p className="text-xs leading-relaxed text-[#3A4B66]">{order.completion.remark}</p>
+              </div>
+              <div>
+                <div className="text-xs text-[#8A9BB4] mb-2">现场安装照片</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {order.completion.photos.map((photo) => (
+                    <button
+                      key={photo.label}
+                      type="button"
+                      onClick={() => setPreviewPhoto(photo)}
+                      className="relative aspect-square overflow-hidden rounded-lg border border-[#BFDBFE] bg-[#EEF4FB]"
+                    >
+                      <img src={photo.url} alt={photo.label} className="h-full w-full object-cover" />
+                      <span className="absolute inset-x-0 bottom-0 bg-[#10233F]/65 px-1.5 py-1 text-[10px] text-white">{photo.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 站点联系人 */}
         <div className="bg-white mx-4 mt-3 rounded-2xl overflow-hidden shadow-[0_2px_12px_0_rgba(37,99,235,0.10)]">
           <div className="px-4 pt-4 pb-3 border-b border-[#EEF4FB]">
@@ -3107,6 +3157,20 @@ const InstallWODetail = ({ orderId, onBack, onAccept, onProcess, onSuccess }: {
             className="w-full py-2.5 rounded-xl text-sm font-semibold bg-[#2563EB] text-white active:bg-[#1E63B8]">
             返回列表
           </button>
+        </div>
+      )}
+
+      {previewPhoto && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={() => setPreviewPhoto(null)}>
+          <div className="w-full overflow-hidden rounded-2xl bg-white" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm font-semibold text-[#10233F]">{previewPhoto.label}</span>
+              <button type="button" aria-label="关闭预览" onClick={() => setPreviewPhoto(null)} className="text-[#8A9BB4]">
+                <Ic d={P.x} size={18} />
+              </button>
+            </div>
+            <img src={previewPhoto.url} alt={previewPhoto.label} className="block w-full max-h-[65vh] object-contain bg-[#10233F]" />
+          </div>
         </div>
       )}
 
