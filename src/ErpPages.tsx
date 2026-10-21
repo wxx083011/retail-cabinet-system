@@ -4681,7 +4681,7 @@ const WAREHOUSES = [
 ];
 
 type InboundStatus = "未入库" | "部分入库" | "已完成";
-type POStatus = "草稿" | "待审核" | "已审核" | "执行中" | "已完成" | "已取消";
+type POStatus = "待入库" | "入库中" | "部分入库" | "已完成" | "已取消";
 
 const INBOUND_STATUS_MAP: Record<InboundStatus, BC> = {
   "未入库": "gray",
@@ -4689,10 +4689,9 @@ const INBOUND_STATUS_MAP: Record<InboundStatus, BC> = {
   "已完成": "green",
 };
 const PO_MGT_STATUS_MAP: Record<POStatus, BC> = {
-  "草稿": "gray",
-  "待审核": "yellow",
-  "已审核": "blue",
-  "执行中": "cyan",
+  "待入库": "gray",
+  "入库中": "cyan",
+  "部分入库": "yellow",
   "已完成": "green",
   "已取消": "red",
 };
@@ -4712,25 +4711,25 @@ const POM_ROWS: POMRow[] = [
     inboundStatus:"已完成", actualInboundTime:"2025-09-12 14:30", poStatus:"已完成", creator:"李采购", createdAt:"2025-09-10 09:15" },
   { id:"POM-20250910-002", name:"九月华南常规补货-统一", inboundNo:"PIB-20250913-002", warehouseId:"sz", supplier:"统一企业（中国）投资有限公司",
     totalBoxes:80, totalQty:1600, actualQty:900, expectedDate:"2025-09-13", operator:"王芳",
-    inboundStatus:"部分入库", actualInboundTime:null, poStatus:"执行中", creator:"李采购", createdAt:"2025-09-10 10:00" },
+    inboundStatus:"部分入库", actualInboundTime:null, poStatus:"部分入库", creator:"李采购", createdAt:"2025-09-10 10:00" },
   { id:"POM-20250909-003", name:"华北紧急补货-农夫山泉", inboundNo:null, warehouseId:"bj", supplier:"农夫山泉股份有限公司",
     totalBoxes:60, totalQty:1200, actualQty:0, expectedDate:"2025-09-16", operator:"张明",
-    inboundStatus:"未入库", actualInboundTime:null, poStatus:"已审核", creator:"张明", createdAt:"2025-09-09 14:22" },
+    inboundStatus:"未入库", actualInboundTime:null, poStatus:"待入库", creator:"张明", createdAt:"2025-09-09 14:22" },
   { id:"POM-20250908-004", name:"华东新品首采-元气森林", inboundNo:null, warehouseId:"sh", supplier:"元气森林（北京）食品科技集团有限公司",
     totalBoxes:50, totalQty:1000, actualQty:0, expectedDate:"2025-09-18", operator:"陈晓",
-    inboundStatus:"未入库", actualInboundTime:null, poStatus:"待审核", creator:"陈晓", createdAt:"2025-09-08 16:40" },
+    inboundStatus:"未入库", actualInboundTime:null, poStatus:"待入库", creator:"陈晓", createdAt:"2025-09-08 16:40" },
   { id:"POM-20250907-005", name:"西南促销囤货-好丽友", inboundNo:"PIB-20250911-003", warehouseId:"cd", supplier:"好丽友食品有限公司",
     totalBoxes:200, totalQty:3600, actualQty:3600, expectedDate:"2025-09-11", operator:"刘洋",
     inboundStatus:"已完成", actualInboundTime:"2025-09-11 10:00", poStatus:"已完成", creator:"刘洋", createdAt:"2025-09-07 08:30" },
   { id:"POM-20250906-006", name:"华东补货-乐事薯片", inboundNo:null, warehouseId:"sh", supplier:"百事食品（中国）有限公司",
     totalBoxes:90, totalQty:2160, actualQty:0, expectedDate:"2025-09-20", operator:"陈晓",
-    inboundStatus:"未入库", actualInboundTime:null, poStatus:"草稿", creator:"陈晓", createdAt:"2025-09-06 11:10" },
+    inboundStatus:"未入库", actualInboundTime:null, poStatus:"待入库", creator:"陈晓", createdAt:"2025-09-06 11:10" },
   { id:"POM-20250905-007", name:"华南九月常规补货-光明乳业", inboundNo:null, warehouseId:"sz", supplier:"光明乳业股份有限公司",
     totalBoxes:40, totalQty:960, actualQty:0, expectedDate:"2025-09-19", operator:"王芳",
     inboundStatus:"未入库", actualInboundTime:null, poStatus:"已取消", creator:"王芳", createdAt:"2025-09-05 09:45" },
   { id:"POM-20250904-008", name:"华北常规补货-康师傅", inboundNo:"PIB-20250909-004", warehouseId:"bj", supplier:"康师傅控股有限公司",
     totalBoxes:100, totalQty:2400, actualQty:1800, expectedDate:"2025-09-09", operator:"张明",
-    inboundStatus:"部分入库", actualInboundTime:null, poStatus:"执行中", creator:"张明", createdAt:"2025-09-04 13:20" },
+    inboundStatus:"部分入库", actualInboundTime:null, poStatus:"部分入库", creator:"张明", createdAt:"2025-09-04 13:20" },
 ];
 
 export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void; onInboundNo?:()=>void }) => {
@@ -4740,7 +4739,6 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
 
   const canEdit = (r: POMRow) => r.inboundStatus === "未入库" && r.poStatus !== "已完成" && r.poStatus !== "已取消";
   const canDelete = (r: POMRow) => r.inboundStatus === "未入库" && r.poStatus !== "已完成" && r.poStatus !== "已取消";
-  const canCreateInbound = (r: POMRow) => r.inboundStatus !== "已完成" && r.poStatus === "已审核" || r.poStatus === "执行中";
 
   const whMap = Object.fromEntries(WAREHOUSES.map(w => [w.id, w]));
 
@@ -4817,16 +4815,12 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#F1F5F9] bg-[#FAFBFC]">
           <span className="text-xs text-[#94A3B8]">操作权限说明：</span>
           <span className="flex items-center gap-1.5 text-xs text-[#64748B]">
-            <span className="w-4 h-4 rounded bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center"><Ic d={P.edit} size={9} className="text-[#2563EB]" /></span>
-            未入库可修改/取消
+            <span className="w-4 h-4 rounded bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center"><Ic d={P.x} size={9} className="text-[#2563EB]" /></span>
+            未入库可取消
           </span>
           <span className="flex items-center gap-1.5 text-xs text-[#64748B]">
             <span className="w-4 h-4 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center"><Ic d={P.shield} size={9} className="text-[#94A3B8]" /></span>
             已入库操作锁定
-          </span>
-          <span className="flex items-center gap-1.5 text-xs text-[#64748B]">
-            <span className="w-4 h-4 rounded bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-center"><Ic d={P.inbox} size={9} className="text-[#16A34A]" /></span>
-            已审核可创建入库单
           </span>
         </div>
 
@@ -4949,12 +4943,6 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
                     {/* 操作 */}
                     <td className="px-3 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1">
-                        {canEdit(r)
-                          ? <Btn variant="ghost" size="sm" icon="edit">修改</Btn>
-                          : <span className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#CBD5E1] cursor-not-allowed select-none">
-                              <Ic d={P.shield} size={11} className="text-[#CBD5E1]" />修改
-                            </span>
-                        }
                         {canDelete(r)
                           ? <Btn variant="ghost" size="sm" className="!text-[#DC2626] hover:!bg-[#FEF2F2]" onClick={()=>setDeleteTarget(r)}>
                               <Ic d={P.x} size={12} />取消
@@ -5044,7 +5032,7 @@ export const PurchaseMgmtList = ({ onCreate, onInboundNo }: { onCreate:()=>void;
               </div>
               <div className="mt-3 text-xs text-[#94A3B8] flex items-center gap-1">
                 <Ic d={P.alertTri} size={11} />
-                生成后采购单状态将更新为「执行中」，可随时在采购入库单列表中追踪进度。
+                生成后采购单状态将更新为「待入库」，可随时在采购入库单列表中追踪进度。
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] rounded-b-xl">
@@ -5577,7 +5565,7 @@ export const PurchaseMgmtNew = ({ onBack }: { onBack:()=>void }) => {
         <div className="flex items-center justify-between px-6 py-3 max-w-screen-2xl mx-auto">
           <div className="flex items-center gap-2 text-xs text-[#64748B]">
             <Ic d={P.info} size={14} className="text-[#7C3AED] flex-shrink-0"/>
-            <span>提交后将自动生成采购入库单并推送至履约系统，采购单状态将变更为「执行中」。</span>
+            <span>提交后将自动生成采购入库单并推送至履约系统，采购单状态将变更为「待入库」。</span>
           </div>
           <div className="flex items-center gap-3">
             {lines.length > 0 && (
