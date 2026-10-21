@@ -1411,7 +1411,7 @@ export const WarehouseInvDetail = ({ onBack }: { onBack: () => void }) => {
 // WAREHOUSE INV ADJUST (手动调整库存 — 商品列表内联编辑)
 // ══════════════════════════════════════════════════════════════════════════════
 type AdjType = "增加" | "减少" | "";
-type AdjReason = "盘点差异" | "报损" | "其他" | "";
+type AdjReason = "盘点差异" | "库外报损" | "库内报损" | "其他" | "";
 
 type AdjRow = {
   skuId: string; skuCode: string; skuName: string; spec: string; currentStock: number;
@@ -1623,7 +1623,8 @@ export const WarehouseInvAdjust = ({ onBack }: { onBack: () => void }) => {
                           ${rowErr.adjReason ? "border-[#DC2626]" : "border-[#E2E8F0]"} text-[#334155]`}>
                         <option value="">选择原因</option>
                         <option value="盘点差异">盘点差异</option>
-                        <option value="报损">报损</option>
+                        <option value="库外报损">库外报损</option>
+                        <option value="库内报损">库内报损</option>
                         <option value="其他">其他</option>
                       </select>
                       {r.adjReason === "其他" && (
