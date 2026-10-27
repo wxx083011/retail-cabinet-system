@@ -69,6 +69,8 @@ const P: Record<string, string> = {
   unlock:  "M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z M17 11V7a5 5 0 00-9.9-1",
   arrow:   "M5 12h14M12 5l7 7-7 7",
   bell:    "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 01-3.46 0",
+  store:   "M4 9v10a2 2 0 002 2h12a2 2 0 002-2V9 M2 9l2-5h16l2 5a4 4 0 01-8 0 4 4 0 01-8 0z M9 21v-6h6v6",
+  calendar:"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z",
   wechat:  "M9.5 13.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm5 0c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8z",
 };
 
@@ -239,6 +241,41 @@ const CB_SHOWCASE = [
   { name: "旺旺雪饼", price: 8.0, emoji: "🍘" },
   { name: "自热米饭", price: 25.9, emoji: "🍱" },
 ];
+
+// ─── B: 商户（点位概览 / 补货详情）数据 ─────────────────────────────────────
+/** 「今天」= 设计稿基准日，日历高亮与补货状态都以此为准 */
+const M_TODAY = { y: 2026, m: 10, d: 27 };
+
+const MERCHANT_POINTS = [
+  {
+    id: "P-508B", name: "办享·天珑移动总部大厦-508B", address: "天珑移动总部大厦 5F · 508B",
+    revenue: 61.26, onSale: 145, todayRestock: false, phone: "13800005080",
+    manager: { name: "吴俊", code: "5270" },
+  },
+  {
+    id: "P-0212", name: "办享·万科云城-2F茶歇区", address: "万科云城 B 座 2F · 茶歇区",
+    revenue: 128.4, onSale: 96, todayRestock: true, phone: "13800002120",
+    manager: { name: "李思远", code: "5142" },
+  },
+];
+
+/** 补货日历圆点状态：done=已完成 fail=未完成 */
+const RESTOCK_STATUS: Record<string, "done" | "fail"> = {
+  "2026-10-12": "done", "2026-10-14": "done", "2026-10-19": "done", "2026-10-21": "done",
+  "2026-09-25": "fail", "2026-09-28": "done",
+};
+
+/** 物流信息流水（按日期倒序） */
+const RESTOCK_LOGS = [
+  { date: "2026-10-21", courier: "刘智辉", status: "配送完成" },
+  { date: "2026-10-19", courier: "刘智辉", status: "配送完成" },
+  { date: "2026-10-14", courier: "刘智辉", status: "配送完成" },
+  { date: "2026-10-12", courier: "刘智辉", status: "配送完成" },
+  { date: "2026-09-28", courier: "王海涛", status: "配送完成" },
+  { date: "2026-09-25", courier: "王海涛", status: "配送失败" },
+] as const;
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
 
 // ─── B: 订单列表共用（商品缩略图 / 状态 tab / 订单卡） ──────────────────────
 /** 订单里只有商品名，缩略图按关键词匹配 */
@@ -608,7 +645,7 @@ const CB_Billing = ({ onHome }: { onHome: () => void }) => (
 );
 
 // ─── B: Mine ─────────────────────────────────────────────────────────────
-const CB_Mine = ({ onOrders, onService, onTab, onScan }: { onOrders: (status: string) => void; onService: () => void; onTab: (t: string) => void; onScan: () => void }) => {
+const CB_Mine = ({ onOrders, onService, onMerchant, onTab, onScan }: { onOrders: (status: string) => void; onService: () => void; onMerchant: () => void; onTab: (t: string) => void; onScan: () => void }) => {
   const [tab, setTab] = useState("全部");
   return (
   <div className="h-full flex flex-col bg-[#F4F8FD]">
@@ -618,7 +655,16 @@ const CB_Mine = ({ onOrders, onService, onTab, onScan }: { onOrders: (status: st
       <div className="absolute -right-8 -top-10 w-32 h-32 rounded-full bg-white/10" />
       <div className="relative flex items-center justify-between mb-5">
         <span className="text-white/85 text-[13px] font-semibold">我的</span>
-        <BrandMark size={24} />
+        <div className="flex items-center gap-2">
+          {/* 商户入口：进入点位概览（原右上角图标位） */}
+          <button onClick={onMerchant}
+            className="flex items-center gap-1 h-7 pl-2 pr-2.5 rounded-full bg-white/20 active:bg-white/30 transition-colors">
+            <Ic d={P.store} size={13} cls="text-white" />
+            <span className="text-[11px] font-bold text-white">商户</span>
+            <Ic d={P.chevR} size={11} cls="text-white/80" />
+          </button>
+          <BrandMark size={24} />
+        </div>
       </div>
       <div className="relative flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-[0_4px_14px_-4px_rgba(16,35,63,0.35)]">
@@ -669,6 +715,280 @@ const CB_Mine = ({ onOrders, onService, onTab, onScan }: { onOrders: (status: st
 
     <TabBarCB active="mine" onHome={() => onTab("home")} onMine={() => {}} onScan={onScan} />
   </div>
+  );
+};
+
+// ─── B: Cabinet Art（点位概览右侧柜体插画，纯 CSS，随主题走） ────────────────
+const CabinetArt = ({ h = 118 }: { h?: number }) => (
+  <div className="relative flex-shrink-0 select-none" style={{ width: 76, height: h }} aria-hidden>
+    {/* 顶面 */}
+    <div className="absolute left-[8px] top-[2px] w-[54px] h-[14px] rounded-[3px] bg-[#24374F]"
+      style={{ transform: "skewX(-30deg)", transformOrigin: "bottom left" }} />
+    {/* 正面柜体 + 4 格灯箱门 */}
+    <div className="absolute left-[8px] top-[14px] w-[50px] rounded-[4px] overflow-hidden bg-[#16233A] shadow-[0_8px_16px_-8px_rgba(16,35,63,0.55)]"
+      style={{ height: h - 18 }}>
+      <div className="flex flex-col gap-[5px] p-[5px]">
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="h-[15px] rounded-[2px]" style={{ background: "linear-gradient(100deg,#1D4ED8 0%,#56A9FF 100%)" }} />
+        ))}
+      </div>
+    </div>
+    {/* 右侧面：拉出立体感 */}
+    <div className="absolute left-[58px] top-[14px] w-[14px] bg-[#0D1728]"
+      style={{ height: h - 18, transform: "skewY(-26deg)", transformOrigin: "top left" }} />
+    {/* 顶部品牌条 */}
+    <div className="absolute left-[8px] top-[18px] w-[50px] h-[10px] bg-[#0D1728]/85" />
+  </div>
+);
+
+// ─── B: Merchant（点位概览：顶部切换点位 / 配送信息 / 电话） ─────────────────
+const CB_Merchant = ({ pointId, onSwitch, onRestock, onBack }: {
+  pointId: string; onSwitch: (id: string) => void; onRestock: (id: string) => void; onBack: () => void;
+}) => {
+  const [switching, setSwitching] = useState(false);
+  const point = MERCHANT_POINTS.find(p => p.id === pointId) ?? MERCHANT_POINTS[0];
+  const [intPart, decPart] = point.revenue.toFixed(2).split(".");
+
+  return (
+    <div className="h-full flex flex-col bg-[#F4F8FD]">
+      {/* 顶部：点位切换（点标题展开点位列表） */}
+      <div className="relative flex-shrink-0 bg-white border-b border-[#E4EDF7] z-20">
+        <div className="flex items-center h-12 px-2">
+          <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full active:bg-[#F4F8FD]">
+            <Ic d={P.chevL} size={20} cls="text-[#10233F]" />
+          </button>
+          <button onClick={() => setSwitching(v => !v)}
+            className="flex-1 min-w-0 flex items-center justify-center gap-1 px-1 h-9 rounded-xl active:bg-[#F4F8FD]">
+            <span className="text-[15px] font-bold text-[#10233F] truncate">{point.name}</span>
+            <Ic d={P.chevD} size={14} cls={`text-[#8A9BB4] flex-shrink-0 transition-transform ${switching ? "rotate-180" : ""}`} />
+          </button>
+          <BrandMark size={24} cls="mr-1" />
+        </div>
+
+        {/* 点位列表：内联展开 */}
+        {switching && (
+          <div className="absolute inset-x-0 top-full z-30 px-3 pt-1.5 pb-2 bg-white/95 backdrop-blur border-b border-[#E4EDF7]">
+            <div className={`bg-white rounded-2xl p-1.5 border border-[#E4EDF7] ${SHADOW.lift}`}>
+              {MERCHANT_POINTS.map(p => {
+                const on = p.id === point.id;
+                return (
+                  <button key={p.id} onClick={() => { onSwitch(p.id); setSwitching(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-colors ${on ? "bg-[#EAF4FF]" : "active:bg-[#F4F8FD]"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${on ? "bg-[#2563EB]" : "bg-[#C2D2E5]"}`} />
+                    <span className="flex-1 min-w-0">
+                      <span className={`block text-[13px] font-semibold truncate ${on ? "text-[#1D4ED8]" : "text-[#10233F]"}`}>{p.name}</span>
+                      <span className="block text-[10px] text-[#8A9BB4] truncate mt-0.5">{p.address}</span>
+                    </span>
+                    {on && <Ic d={P.check} size={14} cls="text-[#2563EB] flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto pt-3 pb-6">
+        {/* 经营概况卡 + 客户经理 */}
+        <div className={`mx-4 mb-3 bg-white rounded-3xl overflow-hidden ${SHADOW.card}`}>
+          <div className="relative px-4 pt-4 pb-3">
+            <div className="absolute -right-8 -bottom-12 w-40 h-40 rounded-full bg-[#F4F8FD]" />
+            <div className="relative flex items-start gap-1">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-end gap-5">
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#8A9BB4]">今日营业额</div>
+                    <div className="flex items-end mt-1.5">
+                      <span className="text-[30px] leading-none font-bold text-[#10233F]">{intPart}</span>
+                      <span className="text-[13px] font-bold text-[#10233F] mb-0.5">.{decPart}</span>
+                      <span className="text-[11px] text-[#8A9BB4] ml-1 mb-0.5">元</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#8A9BB4]">在售商品</div>
+                    <div className="flex items-end mt-1.5">
+                      <span className="text-[26px] leading-none font-bold text-[#10233F]">{point.onSale}</span>
+                      <span className="text-[11px] text-[#8A9BB4] ml-1 mb-0.5">件</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 配送信息 → 补货详情 */}
+                <div className="mt-4">
+                  <div className="text-[11px] font-semibold text-[#8A9BB4] mb-1.5">配送信息</div>
+                  <button onClick={() => onRestock(point.id)}
+                    className={`h-9 pl-3 pr-2 rounded-xl text-white text-[12px] font-bold flex items-center gap-1 active:scale-[0.97] transition-transform ${GRAD.btn} ${SHADOW.btn}`}>
+                    {point.todayRestock ? "今日已补货 · 查看配送" : "今天还没有补货单"}
+                    <Ic d={P.chevR} size={13} cls="text-white" />
+                  </button>
+                </div>
+              </div>
+              <CabinetArt h={118} />
+            </div>
+          </div>
+
+          {/* 客户经理：只留电话，不做微信 */}
+          <div className="relative flex items-center gap-2.5 px-4 py-3 border-t border-[#EEF4FB]">
+            <div className="w-9 h-9 rounded-full bg-[#EAF4FF] flex items-center justify-center flex-shrink-0 text-[16px]">🧑‍💼</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-bold text-[#10233F] truncate">客户经理：{point.manager.name}</div>
+              <div className="text-[10px] text-[#8A9BB4] mt-0.5">员工工号：{point.manager.code}</div>
+            </div>
+            <a href={`tel:${point.phone}`}
+              className="h-8 px-3 rounded-full border border-[#BFDBFE] bg-[#EAF4FF] text-[#2563EB] text-[11px] font-bold flex items-center gap-1 active:scale-95 transition-transform">
+              <Ic d={P.phone} size={12} />
+              打电话
+            </a>
+          </div>
+        </div>
+
+        {/* 在售商品明细不再展示，只保留顶部件数指标 */}
+        <div className="px-4 pt-4 flex items-center justify-center gap-1.5 text-[10px] text-[#8A9BB4]">
+          <Ic d={P.info} size={12} cls="text-[#7CC0FF]" />
+          补货与配送由平台统一安排，有疑问可电话联系客户经理
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── B: Merchant Restock Detail（补货日历 + 物流信息） ───────────────────────
+const CB_MerchantRestock = ({ pointId, onBack }: { pointId: string; onBack: () => void }) => {
+  const point = MERCHANT_POINTS.find(p => p.id === pointId) ?? MERCHANT_POINTS[0];
+  const [ym, setYm] = useState({ y: M_TODAY.y, m: M_TODAY.m });
+  const [day, setDay] = useState(M_TODAY.d);
+
+  const shift = (n: number) => setYm(({ y, m }) => {
+    const t = m + n;
+    if (t < 1) return { y: y - 1, m: 12 };
+    if (t > 12) return { y: y + 1, m: 1 };
+    return { y, m: t };
+  });
+
+  const firstWeekday = new Date(ym.y, ym.m - 1, 1).getDay();      // 0=周日
+  const lead = (firstWeekday + 6) % 7;                             // 周一为首列
+  const daysInMonth = new Date(ym.y, ym.m, 0).getDate();
+  const daysInPrev = new Date(ym.y, ym.m - 1, 0).getDate();
+  const cells: { d: number; muted: boolean }[] = [];
+  for (let i = lead; i > 0; i--) cells.push({ d: daysInPrev - i + 1, muted: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ d, muted: false });
+  let next = 1;
+  while (cells.length % 7 !== 0) cells.push({ d: next++, muted: true });
+
+  const ymPrefix = `${ym.y}-${pad2(ym.m)}`;
+  const logs = RESTOCK_LOGS.filter(l => l.date.startsWith(ymPrefix));
+  const isCurrent = ym.y === M_TODAY.y && ym.m === M_TODAY.m;
+
+  return (
+    <div className="h-full flex flex-col bg-[#F4F8FD]">
+      <NavBar title="补货详情" onBack={onBack} white />
+
+      <div className="flex-1 overflow-y-auto pb-6">
+        {/* 当前点位 */}
+        <div className={`mx-4 mt-2.5 mb-3 bg-white rounded-2xl px-4 py-3 flex items-center gap-2 ${SHADOW.card}`}>
+          <Ic d={P.pin} size={15} cls="text-[#2563EB] flex-shrink-0" />
+          <span className="flex-1 min-w-0 text-[13px] font-semibold text-[#10233F] truncate">{point.name}</span>
+          <Tag label={point.todayRestock ? "今日已补货" : "今日待补货"} color={point.todayRestock ? "green" : "yellow"} dot />
+        </div>
+
+        {/* 补货日历 */}
+        <div className={`mx-4 mb-3 bg-white rounded-3xl overflow-hidden ${SHADOW.card}`}>
+          <div className="flex items-center justify-between pl-4 pr-3 py-3.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[15px] font-bold text-[#10233F]">补货日历</span>
+              <span className="text-[13px] font-bold text-[#2563EB]">{ym.y}年</span>
+              <span className="text-[12px] text-[#C2D2E5]">/</span>
+              <span className="text-[13px] font-bold text-[#2563EB]">{ym.m}月</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => shift(-1)} className="w-7 h-7 rounded-full bg-[#F4F8FD] flex items-center justify-center active:bg-[#EAF4FF]">
+                <Ic d={P.chevL} size={14} cls="text-[#5B6B84]" />
+              </button>
+              <button onClick={() => { setYm({ y: M_TODAY.y, m: M_TODAY.m }); setDay(M_TODAY.d); }}
+                className="w-7 h-7 rounded-full bg-[#EAF4FF] flex items-center justify-center active:scale-95 transition-transform">
+                <span className="text-[10px] font-bold text-[#2563EB]">今</span>
+              </button>
+              <button onClick={() => shift(1)} className="w-7 h-7 rounded-full bg-[#F4F8FD] flex items-center justify-center active:bg-[#EAF4FF]">
+                <Ic d={P.chevR} size={14} cls="text-[#5B6B84]" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-7 px-2">
+            {["一", "二", "三", "四", "五", "六", "日"].map(w => (
+              <div key={w} className="h-7 flex items-center justify-center text-[12px] font-semibold text-[#8A9BB4]">{w}</div>
+            ))}
+            {cells.map((c, i) => {
+              const st = c.muted ? undefined : RESTOCK_STATUS[`${ymPrefix}-${pad2(c.d)}`];
+              const selected = !c.muted && c.d === day;
+              const today = !c.muted && isCurrent && c.d === M_TODAY.d;
+              return (
+                <button key={i} disabled={c.muted} onClick={() => setDay(c.d)}
+                  className="h-11 flex flex-col items-center justify-center gap-0.5">
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px]
+                    ${selected ? `${GRAD.btn} text-white font-bold shadow-[0_4px_10px_-4px_rgba(37,99,235,0.6)]`
+                      : c.muted ? "text-[#C2D2E5]"
+                      : today ? "bg-[#EAF4FF] text-[#2563EB] font-bold"
+                      : "text-[#10233F] font-semibold"}`}>
+                    {c.d}
+                  </span>
+                  <span className={`w-1 h-1 rounded-full
+                    ${st === "done" ? "bg-[#2563EB]" : st === "fail" ? "bg-[#C2D2E5]" : "bg-transparent"}`} />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 图例 */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#EEF4FB] mt-1">
+            <span className="flex items-center gap-1.5 text-[10px] text-[#5B6B84]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />今日补货已完成
+            </span>
+            <span className="flex items-center gap-1.5 text-[10px] text-[#5B6B84]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C2D2E5]" />今日补货失败
+            </span>
+          </div>
+        </div>
+
+        {/* 物流信息：按当前月份流水 */}
+        <SecLabel title="物流信息" action={
+          <span className="text-[11px] text-[#8A9BB4]">{logs.length} 次配送</span>
+        } />
+        <Card cls="mb-3">
+          {logs.length === 0 ? (
+            <Empty icon="truck" title="本月暂无配送记录" desc="有补货安排后会在这里同步物流信息" />
+          ) : (
+            logs.map((l, i) => {
+              const [y, m, d] = l.date.split("-");
+              const done = l.status === "配送完成";
+              return (
+                <div key={l.date} className="flex gap-3 py-3 border-b border-[#EEF4FB] last:border-0">
+                  <div className="flex flex-col items-center pt-1.5 flex-shrink-0">
+                    <span className={`w-2 h-2 rounded-full ${done ? "bg-[#2563EB]" : "bg-[#C2D2E5]"}`} />
+                    {i < logs.length - 1 && <span className="flex-1 w-px bg-[#E4EDF7] my-1" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[14px] font-bold text-[#10233F]">{m}/{d}</span>
+                        <span className="text-[10px] text-[#8A9BB4]">{y}</span>
+                      </div>
+                      <Tag label={l.status} color={done ? "green" : "gray"} />
+                    </div>
+                    <div className="text-[12px] text-[#5B6B84] mt-1.5">当日由（{l.courier}）师傅进行配送</div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </Card>
+
+        <div className="px-4 flex items-center justify-center gap-1.5 text-[10px] text-[#8A9BB4]">
+          <Ic d={P.truck} size={12} cls="text-[#7CC0FF]" />
+          日历圆点表示当日补货执行结果
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -1073,6 +1393,7 @@ const CB_Service = ({ onBack }: { onBack: () => void }) => {
 type CBPage =
   | "home" | "products" | "billing"
   | "mine" | "orders" | "order-detail"
+  | "merchant" | "merchant-restock"
   | "refund-request" | "refund-pending" | "refund-processing" | "refund-done"
   | "service";
 
@@ -1088,6 +1409,8 @@ const CB_NAV: { section: string; label: string; page: CBPage }[] = [
   { section: "我的", label: "退款进度·处理中", page: "refund-processing" },
   { section: "我的", label: "退款进度·已完成", page: "refund-done" },
   { section: "我的", label: "联系客服", page: "service" },
+  { section: "商户", label: "商户（点位概览）", page: "merchant" },
+  { section: "商户", label: "补货详情", page: "merchant-restock" },
 ];
 // ══════════════════════════════════════════════════════════════════════════════
 // 品牌标识（闪购星官方图形标，白底砖块承载）
@@ -1106,6 +1429,7 @@ export const ConsumerMiniAppV2 = () => {
   const [cbKey, setCbKey] = useState(0);
   const [orderId, setOrderId] = useState("ORD-202509-8821");
   const [ordersStatus, setOrdersStatus] = useState("全部");
+  const [pointId, setPointId] = useState(MERCHANT_POINTS[0].id);
   const navToCB = (p: CBPage) => { setCbPage(p); setCbKey(k => k + 1); };
   const sections_cb = [...new Set(CB_NAV.map(p => p.section))];
 
@@ -1114,7 +1438,9 @@ export const ConsumerMiniAppV2 = () => {
       case "products": return <CB_Products onSettle={() => setCbPage("billing")} onBack={() => setCbPage("home")} />;
       case "billing": return <CB_Billing onHome={() => setCbPage("home")} />;
       case "mine":
-        return <CB_Mine onOrders={s => { setOrdersStatus(s); setCbPage("orders"); }} onService={() => setCbPage("service")} onTab={t => { if (t === "home") setCbPage("home"); }} onScan={() => setCbPage("products")} />;
+        return <CB_Mine onOrders={s => { setOrdersStatus(s); setCbPage("orders"); }} onService={() => setCbPage("service")} onMerchant={() => setCbPage("merchant")} onTab={t => { if (t === "home") setCbPage("home"); }} onScan={() => setCbPage("products")} />;
+      case "merchant": return <CB_Merchant pointId={pointId} onSwitch={setPointId} onBack={() => setCbPage("mine")} onRestock={id => { setPointId(id); setCbPage("merchant-restock"); }} />;
+      case "merchant-restock": return <CB_MerchantRestock pointId={pointId} onBack={() => setCbPage("merchant")} />;
       case "orders": return <CB_Orders initialStatus={ordersStatus} onDetail={id => { setOrderId(id); setCbPage("order-detail"); }} onBack={() => setCbPage("mine")} />;
       case "order-detail": return <CB_OrderDetail orderId={orderId} onBack={() => setCbPage("orders")} onRefund={() => setCbPage("refund-request")} />;
       case "refund-request": return <CB_RefundRequest orderId={orderId} onBack={() => setCbPage("order-detail")} onSubmit={() => setCbPage("refund-pending")} />;
