@@ -614,15 +614,15 @@ const FF_NAV: NavGroup[] = [
 // ─── System definitions ───────────────────────────────────────────────────────
 type SystemKey = "ops" | "erp" | "fulfillment" | "crm" | "ff-mini" | "ff-mini-v2" | "client-mini" | "consumer-mini" | "consumer-mini-v2";
 
-const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; color: string; nav?: NavGroup[] }[] = [
+const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; color: string; nav?: NavGroup[]; hidden?: boolean }[] = [
   { key: "crm",         label: "销售 CRM",   sub: "销售CRM",    icon: "send",      color: "#F97316" },
   { key: "ops",         label: "运营后台",   sub: "运营后台",   icon: "grid",      color: "#2563EB", nav: OPS_NAV },
   { key: "erp",         label: "ERP 后台",   sub: "ERP后台",    icon: "package",   color: "#7C3AED", nav: ERP_NAV },
   { key: "fulfillment", label: "履约后台",   sub: "履约后台",   icon: "truck",     color: "#16A34A", nav: FF_NAV },
-  { key: "ff-mini",      label: "履约小程序",  sub: "履约小程序", icon: "zap",       color: "#0891B2" },
+  { key: "ff-mini",      label: "履约小程序",  sub: "履约小程序", icon: "zap",       color: "#0891B2", hidden: true },
   { key: "ff-mini-v2",   label: "履约小程序V2", sub: "履约V2",    icon: "layers",    color: "#56A9FF" },
   { key: "client-mini",  label: "客户小程序",  sub: "客户小程序", icon: "customers", color: "#0D9488" },
-  { key: "consumer-mini",label: "消费者小程序",sub: "消费者端",   icon: "send",      color: "#7C3AED" },
+  { key: "consumer-mini",label: "消费者小程序",sub: "消费者端",   icon: "send",      color: "#7C3AED", hidden: true },
   { key: "consumer-mini-v2", label: "消费者小程序V2", sub: "消费者V2", icon: "tag", color: "#56A9FF" },
 ];
 
@@ -660,7 +660,7 @@ const SystemBar = ({ active, onChange }: { active: SystemKey; onChange: (k: Syst
     <div className="mx-3 my-3 border-t border-white/15" />
     {/* Mini-program systems */}
     <nav className="flex flex-col items-center gap-1 px-2">
-      {SYSTEM_DEFS.filter(s => ["ff-mini","ff-mini-v2","client-mini","consumer-mini","consumer-mini-v2"].includes(s.key)).map(s => {
+      {SYSTEM_DEFS.filter(s => !s.hidden && ["ff-mini","ff-mini-v2","client-mini","consumer-mini","consumer-mini-v2"].includes(s.key)).map(s => {
         const isActive = active === s.key;
         return (
           <button key={s.key} onClick={() => onChange(s.key)}
