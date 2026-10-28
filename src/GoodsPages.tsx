@@ -261,6 +261,33 @@ const RESTOCK_ORDERS = [
   { id: "RO20240904001", cabinetName: "武汉光谷", cabinetId: "WH001", asset: "DEV-20240107", warehouse: "华中仓", label: "紧急", isAuto: "否", batch: "第一批次", skuTypes: 5, total: 60, lastDate: "2024-09-04", createDate: "2024-09-03", status: "履约失败", sorter: "孙丽", sortDone: "2024-09-03 14:00", delivery: "周鑫", deliveryDone: "" },
   { id: "RO20240904002", cabinetName: "西安高新区", cabinetId: "XA001", asset: "DEV-20240108", warehouse: "西北仓", label: "常规", isAuto: "是", batch: "第二批次", skuTypes: 9, total: 108, lastDate: "2024-09-04", createDate: "2024-09-04", status: "分车中", sorter: "马超", sortDone: "", delivery: "", deliveryDone: "" },
 ];
+// 发起补货单可选的补货点位（演示用：仅 SZ001 存在未完成的下架单，用于验证「有则展示、无则隐藏」）
+const RESTOCK_POINTS = [
+  { id: "SZ001", name: "深圳科技园A座大厅" },
+  { id: "SZ002", name: "南山区商务中心B栋" },
+  { id: "GZ001", name: "广州天河CBD写字楼" },
+];
+type DelistItem = { sku: string; name: string; spec: string; slot: string; shouldQty: number; actualQty: number; diffQty: number };
+type DelistOrder = {
+  id: string; status: string;
+  items: DelistItem[];
+};
+const DELIST_ORDERS: Record<string, DelistOrder> = {
+  SZ001: {
+    id: "DC20240903001", status: "待入库",
+    items: [
+      { sku: "SKU-S0006", name: "伊利纯牛奶250ml", spec: "250ml×24", slot: "A-03-02", shouldQty: 24, actualQty: 22, diffQty: 2 },
+      { sku: "SKU-S0003", name: "旺旺雪饼68g", spec: "68g×30", slot: "B-01-04", shouldQty: 36, actualQty: 36, diffQty: 0 },
+      { sku: "SKU-S0007", name: "三只松鼠坚果35g", spec: "35g×20", slot: "C-02-01", shouldQty: 36, actualQty: 34, diffQty: 2 },
+    ],
+  },
+};
+const delistStatusColor = (s: string): "green" | "blue" | "orange" | "red" | "gray" => {
+  if (s === "已完成") return "green";
+  if (s === "下架中") return "blue";
+  if (["待下架", "待入库"].includes(s)) return "orange";
+  return "gray";
+};
 const statusColor = (s: string): "green" | "blue" | "orange" | "red" | "gray" => {
   if (["履约完成"].includes(s)) return "green";
   if (["分车中", "分拣中", "配送中"].includes(s)) return "blue";
@@ -836,6 +863,7 @@ type RestockSku = {
 };
 
 function CreateRestockPage({ onBack, readonly = false }: { onBack: () => void; readonly?: boolean }) {
+  const [pointId, setPointId] = useState(RESTOCK_POINTS[0].id);
   const [date, setDate] = useState("2024-09-04");
   const [batch, setBatch] = useState("第一批次");
   const [multiplier, setMultiplier] = useState(1);
@@ -846,6 +874,11 @@ function CreateRestockPage({ onBack, readonly = false }: { onBack: () => void; r
     realStock: s.realStock, onSaleStock: s.onSaleStock, inTransit: Math.floor(s.sugStock * 0.2),
     avgSale: s.avgSale, baseQty: Math.max(0, s.sugStock - s.realStock),
   })));
+
+  // 下架单：有则仅展示下架明细，无则整块隐藏
+  const pointName = RESTOCK_POINTS.find(p => p.id === pointId)?.name ?? "";
+  const delistOrder: DelistOrder | undefined = DELIST_ORDERS[pointId];
+  const delistItems = delistOrder?.items ?? [];
 
   const updateQty = (id: string, qty: number) => setRows(prev => prev.map(r => r.id === id ? { ...r, baseQty: Math.max(0, Math.round(qty / multiplier)) } : r));
   const removeRow = (id: string) => setRows(prev => prev.filter(r => r.id !== id));
@@ -862,11 +895,46 @@ function CreateRestockPage({ onBack, readonly = false }: { onBack: () => void; r
       </PageHeader>
       <Card className="p-4 mb-4">
         <div className="flex gap-6 items-end">
+          <div>
+            <div className="text-xs text-[#64748B] mb-1">补货点位</div>
+            {readonly
+              ? <div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B] w-56">{pointName}（{pointId}）</div>
+              : <Sel value={pointId} onChange={setPointId} className="w-56">{RESTOCK_POINTS.map(p => <option key={p.id} value={p.id}>{p.name}（{p.id}）</option>)}</Sel>}
+          </div>
           <div><div className="text-xs text-[#64748B] mb-1">补货日期</div><input type="date" value={date} onChange={e => setDate(e.target.value)} disabled={readonly} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 bg-white focus:outline-none disabled:bg-[#F8FAFC]" /></div>
           <div><div className="text-xs text-[#64748B] mb-1">补货批次</div><Sel value={batch} onChange={setBatch} className="w-36">{["第一批次", "第二批次", "第三批次", "第四批次", "第五批次"].map(v => <option key={v}>{v}</option>)}</Sel></div>
           <div className="text-xs text-[#94A3B8] pb-2">同一零售柜同一天同一批次不可重复创建</div>
         </div>
       </Card>
+      {delistOrder && (
+        <Card className="mb-4">
+          <div className="flex items-center justify-between gap-3 p-4 border-b border-[#E2E8F0]">
+            <span className="font-semibold text-sm text-[#0F172A]">下架明细</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="font-mono text-xs text-[#64748B]">{delistOrder.id}</span>
+              <StatusPill label={delistOrder.status} color={delistStatusColor(delistOrder.status)} />
+            </div>
+          </div>
+          <div className="p-4 overflow-x-auto">
+            <table className="w-full min-w-[760px]">
+              <THead cols={["SKU编码", "商品名称", "规格", "货道号", "应下架数量", "实下架数量", "差异数量"]} />
+              <tbody>
+                {delistItems.map(i => (
+                  <TR key={i.sku}>
+                    <TD><span className="font-mono text-xs text-[#64748B]">{i.sku}</span></TD>
+                    <TD><span className="font-medium text-[#0F172A]">{i.name}</span></TD>
+                    <TD>{i.spec}</TD>
+                    <TD>{i.slot}</TD>
+                    <TD>{i.shouldQty}</TD>
+                    <TD>{i.actualQty}</TD>
+                    <TD><span className={i.diffQty > 0 ? "text-[#DC2626] font-medium" : ""}>{i.diffQty}</span></TD>
+                  </TR>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
       <Card className="mb-4">
         <div className="flex items-center justify-between p-4 border-b border-[#E2E8F0]">
           <span className="font-semibold text-sm text-[#0F172A]">商品库列表</span>

@@ -21,6 +21,7 @@ import {
   SmartCabinetList, SmartCabinetDetail, InventoryManagement,
   ListProductsPage, CreateRestockPage, RestockOrderList,
 } from "./GoodsPages";
+import { DelistOrderList, DelistOrderDetail } from "./DelistPages";
 import { FulfillmentMiniApp } from "./FulfillmentMiniPages";
 import { FulfillmentMiniAppV2 } from "./FulfillmentMiniPagesV2";
 import { MiniProgramsApp, ClientMiniApp, ConsumerMiniApp } from "./MiniPrograms";
@@ -94,6 +95,7 @@ type Page =
   | "dashboard"
   | "customer-list" | "customer-detail" | "customer-edit"
   | "goods-cabinet-list" | "goods-cabinet-detail" | "goods-inventory" | "goods-list-product" | "goods-restock-create" | "goods-restock-list"
+  | "goods-delist-list" | "goods-delist-detail"
   | "location-list" | "location-detail" | "location-edit"
   | "device-list" | "device-detail"
   | "product-list" | "product-add" | "product-preset" | "product-restock"
@@ -561,6 +563,7 @@ const OPS_NAV: NavGroup[] = [
   { label: "智能柜管理", items: [
     { key: "goods-cabinet-list", label: "智能柜列表", icon: "layers" },
     { key: "goods-restock-list", label: "补货单列表", icon: "order" },
+    { key: "goods-delist-list", label: "下架单列表", icon: "eyeOff" },
   ]},
   { label: "订单管理", items: [
     { key: "retail-order-list",  label: "订单列表",     icon: "order"   },
@@ -4637,6 +4640,7 @@ export default function App() {
   const [returnOpen, setReturnOpen] = useState(false);
   const [selectedRetailOrder, setSelectedRetailOrder] = useState("SO-20260916-0001");
   const [selectedRefundNo, setSelectedRefundNo] = useState("RF-20260916-001");
+  const [selectedDelistNo, setSelectedDelistNo] = useState("XJ20240903001");
 
   const isAdmin = system === "ops" || system === "erp" || system === "fulfillment";
   const sysDef = SYSTEM_DEFS.find(s => s.key === system)!;
@@ -4676,6 +4680,12 @@ export default function App() {
       case "goods-list-product": return <ListProductsPage onBack={() => setActivePage("goods-inventory")} onInventory={() => setActivePage("goods-inventory")} onRestock={() => setActivePage("goods-restock-create")} />;
       case "goods-restock-create": return <CreateRestockPage onBack={() => setActivePage("goods-inventory")} />;
       case "goods-restock-list": return <RestockOrderList onCreate={() => setActivePage("goods-restock-create")} onDetail={() => setActivePage("goods-restock-create")} onModify={() => setActivePage("goods-restock-create")} />;
+      case "goods-delist-list": return <DelistOrderList
+        onDetail={no => { setSelectedDelistNo(no); setActivePage("goods-delist-detail"); }}
+        onRestock={() => setActivePage("goods-restock-create")}
+        onInbound={() => { setSystem("fulfillment"); setFfPage("ff-inbound"); }}
+      />;
+      case "goods-delist-detail": return <DelistOrderDetail orderNo={selectedDelistNo} onBack={() => setActivePage("goods-delist-list")} />;
       case "order-modify": return <OrderModify onBack={() => setActivePage("order-list")} />;
       case "retail-order-list": return <RetailOrderList onDetail={id => { setSelectedRetailOrder(id); setActivePage("retail-order-detail"); }} />;
       case "retail-order-detail": return <RetailOrderDetail orderId={selectedRetailOrder} onBack={() => setActivePage("retail-order-list")} />;
