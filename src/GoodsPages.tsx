@@ -536,8 +536,8 @@ function InventoryManagement({ onBack, onListProduct, onRestock }: { onBack: () 
         {/* 筛选行 */}
         <div className="flex flex-wrap gap-x-5 gap-y-2 items-end mb-3">
           <div>
-            <div className="text-xs text-[#64748B] mb-1">商品名称/编码</div>
-            <Inp value={skuSearch} onChange={setSkuSearch} placeholder="模糊搜索" className="w-40" />
+            <div className="text-xs text-[#64748B] mb-1">商品名称/编码/69码</div>
+            <Inp value={skuSearch} onChange={setSkuSearch} placeholder="名称/编码/69码" className="w-52" />
           </div>
           <div>
             <div className="text-xs text-[#64748B] mb-1">分类</div>

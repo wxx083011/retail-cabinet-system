@@ -2825,7 +2825,7 @@ const DeviceList = ({ onDetail, onRemote }: { onDetail: () => void; onRemote: ()
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC]">
-                {["资产编码","IEMI","设备型号","关联点位名称","关联客户名称","在线状态","最近离线时间","投放状态","安装日期","操作"].map(h => (
+                {["资产编码","IMEI","设备型号","关联点位名称","关联客户名称","在线状态","最近离线时间","投放状态","安装日期","操作"].map(h => (
                   <th key={h} className={`py-3 px-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap ${h === "操作" ? "sticky right-0 bg-[#F8FAFC] shadow-[-4px_0_8px_rgba(0,0,0,0.04)]" : ""}`}>{h}</th>
                 ))}
               </tr>
