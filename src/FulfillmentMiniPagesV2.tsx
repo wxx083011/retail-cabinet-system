@@ -535,7 +535,7 @@ const DELIVERIES = [
     currentBatch: 1,
     totalBatch: 4,
     status: "待配送",
-    batch: "DC-2509-019",
+    batch: "DC-2509-019", batchSeq: 1,
     stops: 4,
     done: 0,
     driver: "李强",
@@ -1679,6 +1679,7 @@ const DeliveryList = ({ onDetail, onDelistDetail, onBack, tab, onTabChange }: {
   // delivery step state: 0=已送达, 1=补货开门, 2=拍摄陈列前照片, 3=完成批次上架, 4=done(履约完成/失败)
   const [deliveryStep, setDeliveryStep] = useState<Record<string, number>>({});
   const [deliveryStatusOverride, setDeliveryStatusOverride] = useState<Record<string, string>>({});
+  const [startTarget, setStartTarget] = useState<typeof DELIVERIES[0] | null>(null);
   const getStep = (id: string) => deliveryStep[id] ?? 0;
   const advanceStep = (id: string) => setDeliveryStep(prev => ({ ...prev, [id]: Math.min((prev[id] ?? 0) + 1, 4) }));
   const getStatus = (d: typeof DELIVERIES[0]) => deliveryStatusOverride[d.id] ?? d.status;
@@ -1686,7 +1687,7 @@ const DeliveryList = ({ onDetail, onDelistDetail, onBack, tab, onTabChange }: {
   const FILTERS = ["待配送", "配送中", "履约完成", "履约失败"];
 
   const filtered = DELIVERIES.filter(d => {
-    const matchesFilter = d.status === filter;
+    const matchesFilter = getStatus(d) === filter;
     const matchesSearch =
       !searchKey ||
       d.id.toLowerCase().includes(searchKey.toLowerCase()) ||
@@ -1906,7 +1907,10 @@ const DeliveryList = ({ onDetail, onDelistDetail, onBack, tab, onTabChange }: {
                       </div>
                     </div>
                     <div className="px-4 py-2.5 bg-[#F8FAFC] border-t border-[#E4EDF7] flex items-center justify-end">
-                      <span className="px-4 py-1.5 bg-[#2563EB] text-white rounded-xl text-xs font-bold">查看补货列表 →</span>
+                      <button onClick={(e) => { e.stopPropagation(); setStartTarget(d); }}
+                        className="px-4 py-1.5 bg-[#2563EB] active:bg-[#1E63B8] text-white rounded-xl text-xs font-bold transition-colors">
+                        开始配送
+                      </button>
                     </div>
                   </div>
                 );
@@ -2041,6 +2045,43 @@ const DeliveryList = ({ onDetail, onDelistDetail, onBack, tab, onTabChange }: {
             >
               取消
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Start-delivery confirm dialog */}
+      {startTarget && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center px-10">
+          <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_8px_32px_0_rgba(16,35,63,0.24)]">
+            <div className="p-5 pb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#DCEBFF] text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                  <Ic d={P.truck} size={16} />
+                </div>
+                <h3 className="text-base font-bold text-[#10233F]">确认开始配送？</h3>
+              </div>
+              <div className="p-3 bg-[#F8FAFC] border border-[#E4EDF7] rounded-xl space-y-1.5 text-xs">
+                <div className="flex justify-between gap-3"><span className="text-[#8A9BB4] flex-shrink-0">配送单号</span><span className="font-mono font-bold text-[#2563EB]">{startTarget.id}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-[#8A9BB4] flex-shrink-0">点位</span><span className="font-bold text-[#10233F] truncate">{startTarget.pointName}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-[#8A9BB4] flex-shrink-0">配送车辆</span><span className="font-bold text-[#10233F]">{(startTarget as any).vehicleCode || "—"}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-[#8A9BB4] flex-shrink-0">需求履约时间</span><span className="font-bold text-[#10233F]">{(startTarget as any).deadline || "—"}</span></div>
+              </div>
+              <p className="text-[11px] text-[#8A9BB4] mt-3 leading-relaxed">开始后任务将转入「配送中」，并按批次解锁补货上架流程。</p>
+            </div>
+            <div className="flex border-t border-[#E4EDF7]">
+              <button onClick={() => setStartTarget(null)}
+                className="flex-1 py-3 text-xs font-bold text-[#5B6B84] active:bg-[#F8FAFC] transition-colors">
+                取消
+              </button>
+              <button onClick={() => {
+                  setDeliveryStatusOverride(prev => ({ ...prev, [startTarget.id]: "配送中" }));
+                  setStartTarget(null);
+                  setFilter("配送中");
+                }}
+                className="flex-1 py-3 text-xs font-bold text-[#2563EB] border-l border-[#E4EDF7] active:bg-[#DCEBFF] transition-colors">
+                确认开始
+              </button>
+            </div>
           </div>
         </div>
       )}
