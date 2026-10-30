@@ -17,6 +17,7 @@ import {
 } from "./FulfillmentPages";
 import { WarehouseList, WarehouseForm, WarehouseInvList, WarehouseInvDetail, WarehouseInvAdjust } from "./WarehousePages";
 import { CrmApp } from "./CrmPages";
+import { CrmAppV2 } from "./CrmPagesV2";
 import {
   SmartCabinetList, SmartCabinetDetail, InventoryManagement,
   ListProductsPage, CreateRestockPage, RestockOrderList,
@@ -615,7 +616,7 @@ const FF_NAV: NavGroup[] = [
 ];
 
 // ─── System definitions ───────────────────────────────────────────────────────
-type SystemKey = "ops" | "erp" | "fulfillment" | "crm" | "ff-mini" | "ff-mini-v2" | "client-mini" | "consumer-mini" | "consumer-mini-v2";
+type SystemKey = "ops" | "erp" | "fulfillment" | "crm" | "crm-v2" | "ff-mini" | "ff-mini-v2" | "client-mini" | "consumer-mini" | "consumer-mini-v2";
 
 const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; color: string; nav?: NavGroup[]; hidden?: boolean }[] = [
   { key: "crm",         label: "销售 CRM",   sub: "销售CRM",    icon: "send",      color: "#F97316" },
@@ -627,6 +628,7 @@ const SYSTEM_DEFS: { key: SystemKey; label: string; sub: string; icon: string; c
   { key: "client-mini",  label: "客户小程序",  sub: "客户小程序", icon: "customers", color: "#0D9488" },
   { key: "consumer-mini",label: "消费者小程序",sub: "消费者端",   icon: "send",      color: "#7C3AED", hidden: true },
   { key: "consumer-mini-v2", label: "消费者小程序V2", sub: "消费者V2", icon: "tag", color: "#56A9FF" },
+  { key: "crm-v2",     label: "销售 CRM V2",   sub: "销售CRM2期", icon: "send",      color: "#F97316" },
 ];
 
 // ─── System Icon Bar (left, always visible) ───────────────────────────────────
@@ -663,7 +665,7 @@ const SystemBar = ({ active, onChange }: { active: SystemKey; onChange: (k: Syst
     <div className="mx-3 my-3 border-t border-white/15" />
     {/* Mini-program systems */}
     <nav className="flex flex-col items-center gap-1 px-2">
-      {SYSTEM_DEFS.filter(s => !s.hidden && ["ff-mini","ff-mini-v2","client-mini","consumer-mini","consumer-mini-v2"].includes(s.key)).map(s => {
+      {SYSTEM_DEFS.filter(s => !s.hidden && ["crm-v2","ff-mini","ff-mini-v2","client-mini","consumer-mini","consumer-mini-v2"].includes(s.key)).map(s => {
         const isActive = active === s.key;
         return (
           <button key={s.key} onClick={() => onChange(s.key)}
@@ -4747,6 +4749,18 @@ export default function App() {
           <p className="text-sm text-[#94A3B8] ml-6">销售人员移动端 · 点位拓展 · 客户管理 · 审批 · 统计</p>
         </div>
         <CrmApp />
+      </div>
+    );
+    if (system === "crm-v2") return (
+      <div className="flex-1 overflow-auto p-8 bg-[#F5F7FA]">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full" style={{ background: "#F97316" }} />
+            <h2 className="text-xl font-bold text-[#0F172A]">销售 CRM 小程序 · 2 期</h2>
+          </div>
+          <p className="text-sm text-[#94A3B8] ml-6">集采客户 · 渠道商 · 设备管理（装机/撤机/移机/维修） · 审批</p>
+        </div>
+        <CrmAppV2 />
       </div>
     );
     if (system === "ff-mini") return (
