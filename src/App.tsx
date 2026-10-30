@@ -4641,6 +4641,13 @@ export default function App() {
   const [selectedRetailOrder, setSelectedRetailOrder] = useState("SO-20260916-0001");
   const [selectedRefundNo, setSelectedRefundNo] = useState("RF-20260916-001");
   const [selectedDelistNo, setSelectedDelistNo] = useState("XJ20240903001");
+  // 排车工作台的进入来源，返回时回到来源页
+  const [dispatchWorkbenchFrom, setDispatchWorkbenchFrom] = useState<Page>("ff-dispatch-list");
+
+  const enterDispatchWorkbench = (from: Page) => {
+    setDispatchWorkbenchFrom(from);
+    setActivePage("ff-dispatch-workbench");
+  };
 
   const isAdmin = system === "ops" || system === "erp" || system === "fulfillment";
   const sysDef = SYSTEM_DEFS.find(s => s.key === system)!;
@@ -4724,9 +4731,9 @@ export default function App() {
       case "ff-staff-form": return <StaffForm onBack={() => setActivePage("ff-staff")} />;
       case "ff-vehicle": return <VehicleList onCreate={() => setActivePage("ff-vehicle-form")} onEdit={() => setActivePage("ff-vehicle-form")} />;
       case "ff-vehicle-form": return <VehicleForm onBack={() => setActivePage("ff-vehicle")} />;
-      case "ff-dispatch-list": return <DispatchList onWorkbench={() => setActivePage("ff-dispatch-workbench")} />;
-      case "ff-dispatch-workbench": return <DispatchWorkbench onBack={() => setActivePage("ff-dispatch-list")} />;
-      case "ff-dispatch-schedule": return <DispatchScheduleList onWorkbench={() => setActivePage("ff-dispatch-workbench")} />;
+      case "ff-dispatch-list": return <DispatchList onWorkbench={() => enterDispatchWorkbench("ff-dispatch-list")} />;
+      case "ff-dispatch-workbench": return <DispatchWorkbench onBack={() => setActivePage(dispatchWorkbenchFrom)} />;
+      case "ff-dispatch-schedule": return <DispatchScheduleList onWorkbench={() => enterDispatchWorkbench("ff-dispatch-schedule")} />;
       case "ff-engineer": return <EngineerList onCreate={() => setActivePage("ff-engineer-form")} onEdit={() => setActivePage("ff-engineer-form")} />;
       case "ff-engineer-form": return <EngineerForm onBack={() => setActivePage("ff-engineer")} />;
       case "ff-workorder-list": return <WorkOrderList onDetail={() => setActivePage("ff-workorder-detail")} onAssign={() => setActivePage("ff-workorder-assign")} />;

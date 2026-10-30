@@ -862,9 +862,34 @@ type RestockSku = {
   onSaleStock: number; inTransit: number; avgSale: number; baseQty: number;
 };
 
+// 字段标题旁的 tips 图标：hover 出现提示气泡
+const TipInfo = ({ text }: { text: string }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="relative inline-flex" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      <Icon d={I.info} size={13} className="text-[#94A3B8] cursor-help" />
+      {show && (
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-max max-w-[240px] px-3 py-2 rounded-lg bg-[#1E293B] text-white text-xs leading-relaxed shadow-lg whitespace-normal">
+          {text}
+          <span className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-[#1E293B] rotate-45 -mt-1" />
+        </span>
+      )}
+    </span>
+  );
+};
+
 function CreateRestockPage({ onBack, readonly = false }: { onBack: () => void; readonly?: boolean }) {
+  // 12点前默认当天，12点后默认次日
+  const defaultRestockDate = () => {
+    const now = new Date();
+    if (now.getHours() < 12) now.setDate(now.getDate());
+    else now.setDate(now.getDate() + 1);
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${now.getFullYear()}-${m}-${d}`;
+  };
   const [pointId, setPointId] = useState(RESTOCK_POINTS[0].id);
-  const [date, setDate] = useState("2024-09-04");
+  const [date, setDate] = useState(defaultRestockDate());
   const [batch, setBatch] = useState("第一批次");
   const [multiplier, setMultiplier] = useState(1);
   const [remark, setRemark] = useState("");
@@ -901,7 +926,13 @@ function CreateRestockPage({ onBack, readonly = false }: { onBack: () => void; r
               ? <div className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 flex items-center bg-[#F8FAFC] text-[#64748B] w-56">{pointName}（{pointId}）</div>
               : <Sel value={pointId} onChange={setPointId} className="w-56">{RESTOCK_POINTS.map(p => <option key={p.id} value={p.id}>{p.name}（{p.id}）</option>)}</Sel>}
           </div>
-          <div><div className="text-xs text-[#64748B] mb-1">补货日期</div><input type="date" value={date} onChange={e => setDate(e.target.value)} disabled={readonly} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 bg-white focus:outline-none disabled:bg-[#F8FAFC]" /></div>
+          <div>
+            <div className="text-xs text-[#64748B] mb-1 flex items-center gap-1">
+              补货日期
+              <TipInfo text="即期望履约时间，履约将按该日期安排分拣与配送" />
+            </div>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} disabled={readonly} className="h-9 border border-[#E2E8F0] rounded-md text-sm px-3 bg-white focus:outline-none disabled:bg-[#F8FAFC]" />
+          </div>
           <div><div className="text-xs text-[#64748B] mb-1">补货批次</div><Sel value={batch} onChange={setBatch} className="w-36">{["第一批次", "第二批次", "第三批次", "第四批次", "第五批次"].map(v => <option key={v}>{v}</option>)}</Sel></div>
           <div className="text-xs text-[#94A3B8] pb-2">同一零售柜同一天同一批次不可重复创建</div>
         </div>

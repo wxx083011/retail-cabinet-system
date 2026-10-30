@@ -2675,7 +2675,7 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
             <table className="w-full text-sm border-collapse" style={{minWidth:"1400px"}}>
               <thead>
                 <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                  {["补货单号","仓库","点位名称","点位编码","点位地址","点位详细地址","补货批次","商品总数","出单日期","推送履约时间","期望送达时间","状态","操作"].map(h => (
+                  {["补货单号","仓库","点位名称","点位编码","点位地址","点位详细地址","补货批次","商品总数","出单日期","推送履约时间","期望送达时间","状态"].map(h => (
                     <th key={h} className="px-3 py-3 text-left text-[11px] font-semibold text-[#64748B] uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -2715,9 +2715,6 @@ export const DispatchList = ({ onWorkbench }: { onWorkbench: () => void }) => {
                     <td className="px-3 py-3 whitespace-nowrap text-xs text-[#64748B]">{r.expectDelivery}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <Badge dot label={r.status} color="blue" />
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <button onClick={onWorkbench} className="px-2 py-1 text-[11px] text-[#2563EB] hover:bg-[#EFF6FF] rounded border border-transparent hover:border-[#BFDBFE] transition-all">详情</button>
                     </td>
                   </tr>
                 ))}

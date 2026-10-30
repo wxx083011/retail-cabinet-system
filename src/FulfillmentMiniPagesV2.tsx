@@ -1687,6 +1687,11 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
       d.address.toLowerCase().includes(searchKey.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+  // 待配送任务一次只展示一个（当前待执行任务），完成后下一个自动浮现
+  const firstPending = filtered.find(d => getStatus(d) === "待配送");
+  const displayList = firstPending
+    ? [...filtered.filter(d => getStatus(d) !== "待配送"), firstPending]
+    : filtered;
 
   return (
     <div className="h-full flex flex-col relative bg-[#F4F8FD]">
@@ -1854,7 +1859,7 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
           ));
         })() : (
           <div className="space-y-3">
-            {filtered.map(d => {
+            {displayList.map(d => {
               const status = getStatus(d);
               const progressPct = Math.round((d.currentBatch / d.totalBatch) * 100);
               const statusBg =
@@ -1907,6 +1912,14 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
                   </div>
                   <div className="px-4 py-2.5 bg-[#F8FAFC] border-t border-[#E4EDF7] flex items-center justify-between gap-2">
                     <span className="text-xs text-[#8A9BB4] flex-shrink-0">司机: <strong className="text-[#3A4B66]">{d.driver}</strong></span>
+                    {status === "待配送" && (
+                      <button
+                        onClick={() => setDeliveryStatusOverride(prev => ({ ...prev, [d.id]: "配送中" }))}
+                        className="px-4 py-1.5 bg-[#2563EB] active:bg-[#1E63B8] text-white rounded-xl text-xs font-bold transition-colors"
+                      >
+                        开始配送
+                      </button>
+                    )}
                     {(status === "履约完成" || status === "履约失败") && (
                       <button onClick={() => onDetail(d.id)} className="px-4 py-1.5 bg-[#EEF4FB] text-[#4A5C78] rounded-xl text-xs font-bold transition-colors active:bg-[#E4EDF7]">查看详情</button>
                     )}
