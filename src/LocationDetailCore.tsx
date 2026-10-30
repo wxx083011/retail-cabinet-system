@@ -137,6 +137,15 @@ export const LocationDetailTabs = ({ extraAction }: { extraAction?: ReactNode })
                 <Field label="竞对传统售货机" value={<YN yes={false} />} />
                 <Field label="百米内便利店"   value={<YN yes={true} />} />
                 <div className="col-span-3">
+                  <Field label="点位标签" value={
+                    <div className="flex flex-wrap gap-1.5">
+                      {["核心点位", "高流量", "写字楼"].map(tag => (
+                        <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#EFF6FF] border border-[#BFDBFE] text-xs font-medium text-[#2563EB]">{tag}</span>
+                      ))}
+                    </div>
+                  } />
+                </div>
+                <div className="col-span-3">
                   <Field label="点位信息备注" value={<span className="text-[#64748B]">大堂空间宽敞，人流量大，建议增补 1 台设备。</span>} />
                 </div>
               </div>

@@ -223,6 +223,106 @@ const MC = ({
   </div>
 )
 
+// 点位标签候选池：原型用固定池模拟后端 /mp/sites/tags 的联想结果，实际以后端返回为准
+const CRM_LOCATION_TAGS = [
+  "核心点位",
+  "高流量",
+  "写字楼",
+  "商业综合体",
+  "医院",
+  "高校",
+  "交通枢纽",
+  "产业园区",
+  "社区",
+  "旗舰点位",
+]
+
+// 点位标签输入：已有标签直接选，没有的输入后回车即创建（最多 20 个，单个不超过 32 字）
+const LocationTagField = ({
+  value,
+  onChange,
+}: {
+  value: string[]
+  onChange: (v: string[]) => void
+}) => {
+  const [q, setQ] = useState("")
+  const keyword = q.trim()
+  const candidates = CRM_LOCATION_TAGS.filter(
+    (t) => !value.includes(t) && (!keyword || t.includes(keyword))
+  )
+  const canCreate =
+    !!keyword &&
+    !value.includes(keyword) &&
+    !CRM_LOCATION_TAGS.includes(keyword) &&
+    value.length < 20
+
+  const add = (tag: string) => {
+    const name = tag.trim().slice(0, 32)
+    if (!name || value.includes(name) || value.length >= 20) return
+    onChange([...value, name])
+    setQ("")
+  }
+
+  return (
+    <div>
+      <div className="min-h-[38px] border border-[#E2E8F0] rounded-[8px] bg-[#F8FAFC] px-2 py-1.5 flex flex-wrap items-center gap-1.5">
+        {value.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] font-medium text-[#2563EB]"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => onChange(value.filter((t) => t !== tag))}
+              className="w-4 h-4 flex items-center justify-center active:text-[#DC2626]"
+            >
+              <Ic d={P.x} size={10} />
+            </button>
+          </span>
+        ))}
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              add(keyword)
+            }
+          }}
+          placeholder={
+            value.length ? "继续添加…" : "搜索已有标签或输入新标签后回车"
+          }
+          className="flex-1 min-w-[120px] h-6 text-[15px] text-[#0F172A] placeholder-[#CBD5E1] outline-none bg-transparent"
+        />
+      </div>
+      {(candidates.length > 0 || canCreate) && (
+        <div className="mt-1.5 border border-[#F1F5F9] rounded-[8px] overflow-hidden">
+          {candidates.slice(0, 5).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => add(t)}
+              className="w-full px-3 py-2 text-left text-[13px] text-[#334155] border-b border-[#F8FAFC] last:border-0 active:bg-[#F8FAFC]"
+            >
+              {t}
+            </button>
+          ))}
+          {canCreate && (
+            <button
+              type="button"
+              onClick={() => add(keyword)}
+              className="w-full px-3 py-2 text-left text-[13px] font-medium text-[#2563EB] border-t border-[#F8FAFC] active:bg-[#F8FAFC]"
+            >
+              创建「{keyword}」
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Primary button
 const MBtn = ({
   children,
@@ -1344,6 +1444,21 @@ const LocationBasicDetail = ({ loc }: { loc: (typeof LOC_DATA)[number] }) => (
       <MKV label="是否有竞对智能售货机" value="无" />
       <MKV label="是否有竞对传统售货机" value="有" />
       <MKV label="百米内是否有便利店" value="无" />
+      <MKV
+        label="点位标签"
+        value={
+          <div className="flex flex-wrap gap-1 justify-end">
+            {["核心点位", "高流量"].map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-2 py-0.5 rounded bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] font-medium text-[#2563EB]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        }
+      />
       <MKV label="点位信息备注" value="入口左侧，靠近电梯口，客流高峰为早9点和午11-13点" />
     </MC>
     <MSec title="场地照片" />
@@ -1770,6 +1885,7 @@ const NewLocation = ({
   const [rivalTrad, setRivalTrad] = useState("无")
   const [nearStore, setNearStore] = useState("无")
   const [syncVal, setSyncVal] = useState("否")
+  const [tags, setTags] = useState<string[]>(["核心点位", "高流量"])
   // 关联装机工单（选“是”后展开）
   const [customLook, setCustomLook] = useState("否") // 是否定制外观，默认否
   const [needReport, setNeedReport] = useState("") // 是否需提前报备，无默认
@@ -1880,6 +1996,12 @@ const NewLocation = ({
               rows={3}
               className="w-full text-[15px] text-[#0F172A] placeholder-[#CBD5E1] outline-none resize-none bg-transparent"
             />
+          </MF>
+          <MF label="点位标签">
+            <LocationTagField value={tags} onChange={setTags} />
+            <div className="text-[11px] text-[#94A3B8] mt-1">
+              已选 {tags.length}/20，单个标签不超过 32 字
+            </div>
           </MF>
         </MC>
 

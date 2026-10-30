@@ -1589,6 +1589,62 @@ const SearchableSelect = ({ placeholder, options, value, onChange, highlight }: 
   );
 };
 
+// 点位标签候选池：原型用固定池模拟后端 /sites/tags 的联想结果，实际以后端返回为准
+const LOCATION_TAGS = ["核心点位", "高流量", "写字楼", "商业综合体", "医院", "高校", "交通枢纽", "产业园区", "社区", "旗舰点位"];
+
+// 点位标签输入：已有标签直接选，没有的输入后回车即创建（最多 20 个，单个不超过 32 字）
+const LocationTagInput = ({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) => {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const keyword = q.trim();
+  const candidates = LOCATION_TAGS.filter(t => !value.includes(t) && (!keyword || t.includes(keyword)));
+  const canCreate = !!keyword && !value.includes(keyword) && !LOCATION_TAGS.includes(keyword) && value.length < 20;
+
+  const add = (tag: string) => {
+    const name = tag.trim().slice(0, 32);
+    if (!name || value.includes(name) || value.length >= 20) return;
+    onChange([...value, name]);
+    setQ("");
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false); }}>
+      <div className={`min-h-9 border rounded-lg bg-white px-2 py-1.5 flex flex-wrap items-center gap-1.5 transition-colors ${open ? "border-[#2563EB] ring-1 ring-[#2563EB]/20" : "border-[#E2E8F0]"}`}>
+        {value.map(tag => (
+          <span key={tag} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-md bg-[#EFF6FF] border border-[#BFDBFE] text-xs font-medium text-[#2563EB]">
+            {tag}
+            <button type="button" onClick={() => onChange(value.filter(t => t !== tag))}
+              className="w-4 h-4 flex items-center justify-center rounded hover:bg-[#DBEAFE] hover:text-[#DC2626] transition-colors">
+              <Icon d={Icons.x} size={10} />
+            </button>
+          </span>
+        ))}
+        <input value={q}
+          onChange={e => { setQ(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add(keyword); } }}
+          placeholder={value.length ? "继续添加标签…" : "搜索已有标签，或直接输入新标签后回车"}
+          className="flex-1 min-w-[180px] h-6 text-sm text-[#0F172A] placeholder:text-[#9CA3AF] outline-none bg-transparent" />
+      </div>
+      {open && (candidates.length > 0 || canCreate) && (
+        <div className="absolute z-20 mt-1 left-0 right-0 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden">
+          <div className="max-h-44 overflow-y-auto py-1">
+            {candidates.map(t => (
+              <div key={t} onMouseDown={e => { e.preventDefault(); add(t); }}
+                className="px-3 py-2 text-sm text-[#374151] cursor-pointer hover:bg-[#F8FAFC]">{t}</div>
+            ))}
+            {canCreate && (
+              <div onMouseDown={e => { e.preventDefault(); add(keyword); }}
+                className="px-3 py-2 text-sm text-[#2563EB] cursor-pointer hover:bg-[#F8FAFC]">创建「{keyword}」</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const LocationEdit = ({ onBack }: { onBack: () => void }) => {
   const [customer, setCustomer] = useState("蜂巢智能科技（深圳）有限公司");
   const [warehouse, setWarehouse] = useState("深圳中心仓");
@@ -1609,6 +1665,7 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
   const [compTrad, setCompTrad] = useState("无");
   const [nearShop, setNearShop] = useState("无");
   const [remark, setRemark] = useState("");
+  const [tags, setTags] = useState<string[]>(["核心点位", "高流量", "写字楼"]);
   const [contractFile, setContractFile] = useState<string | null>(null);
   const [contactName, setContactName] = useState("张建国");
   const [contactPhone, setContactPhone] = useState("13800138000");
@@ -1866,6 +1923,13 @@ const LocationEdit = ({ onBack }: { onBack: () => void }) => {
               <textarea rows={4} maxLength={500} value={remark} onChange={e => setRemark(e.target.value)}
                 placeholder="请输入点位备注信息，方便运营后续追溯"
                 className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm text-[#334155] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20 resize-none transition-colors" />
+            </div>
+
+            {/* 17. 点位标签 */}
+            <div className="col-span-2">
+              <Lbl hint="已有标签直接选，没有的直接输入新名称回车创建">点位标签</Lbl>
+              <LocationTagInput value={tags} onChange={setTags} />
+              <p className="text-xs text-[#9CA3AF] mt-1">已选 {tags.length}/20，单个标签不超过 32 字</p>
             </div>
           </div>
         </Card>
