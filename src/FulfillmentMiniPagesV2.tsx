@@ -543,6 +543,10 @@ const DELIVERIES = [
     dist: "8.7km",
     created: "09-14 09:00",
     failReason: "",
+    replenishOrders: ["RP-2509-041", "RP-2509-042", "RP-2509-043"],
+    totalItems: 174,
+    vehicleCode: "沪A·D2856",
+    deadline: "2025-09-14 18:00",
   },
   {
     id: "DO-20250910-003",
@@ -594,6 +598,10 @@ const DELIVERIES = [
     dist: "15.2km",
     created: "09-14 11:30",
     failReason: "",
+    replenishOrders: ["RP-2509-051", "RP-2509-052"],
+    totalItems: 96,
+    vehicleCode: "粤A·F7123",
+    deadline: "2025-09-14 20:00",
   }
 ];
 
@@ -1662,10 +1670,10 @@ const PrintView = ({ batchId, onBack }: { batchId: string; onBack: () => void })
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN: DELIVERY LIST
 // ══════════════════════════════════════════════════════════════════════════════
-const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
-  onDetail: (id: string) => void; onBack: () => void; tab: string; onTabChange: (t: string) => void;
+const DeliveryList = ({ onDetail, onDelistDetail, onBack, tab, onTabChange }: {
+  onDetail: (id: string) => void; onDelistDetail: (id: string) => void; onBack: () => void; tab: string; onTabChange: (t: string) => void;
 }) => {
-  const [filter, setFilter] = useState("全部");
+  const [filter, setFilter] = useState("待配送");
   const [searchKey, setSearchKey] = useState("");
   const [navMapTask, setNavMapTask] = useState<typeof DELIVERIES[0] | null>(null);
   // delivery step state: 0=已送达, 1=补货开门, 2=拍摄陈列前照片, 3=完成批次上架, 4=done(履约完成/失败)
@@ -1675,10 +1683,10 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
   const advanceStep = (id: string) => setDeliveryStep(prev => ({ ...prev, [id]: Math.min((prev[id] ?? 0) + 1, 4) }));
   const getStatus = (d: typeof DELIVERIES[0]) => deliveryStatusOverride[d.id] ?? d.status;
 
-  const FILTERS = ["全部", "待配送", "配送中", "履约完成", "履约失败"];
+  const FILTERS = ["待配送", "配送中", "履约完成", "履约失败"];
 
   const filtered = DELIVERIES.filter(d => {
-    const matchesFilter = filter === "全部" || d.status === filter;
+    const matchesFilter = d.status === filter;
     const matchesSearch =
       !searchKey ||
       d.id.toLowerCase().includes(searchKey.toLowerCase()) ||
@@ -1845,10 +1853,16 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
                     司机: <strong className="text-[#3A4B66]">{d.driver}</strong>
                   </span>
                   {status === "配送中" && (
-                    <button onClick={() => onDetail(d.id)}
-                      className="px-4 py-1.5 bg-[#2563EB] active:bg-[#1E63B8] text-white rounded-xl text-xs font-bold transition-colors">
-                      开始补货
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => onDelistDetail(d.id)}
+                        className="px-3 py-1.5 bg-[#EEF4FB] text-[#4A5C78] rounded-xl text-xs font-bold transition-colors active:bg-[#E4EDF7]">
+                        下架明细
+                      </button>
+                      <button onClick={() => onDetail(d.id)}
+                        className="px-4 py-1.5 bg-[#2563EB] active:bg-[#1E63B8] text-white rounded-xl text-xs font-bold transition-colors">
+                        开始补货
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1866,6 +1880,37 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
                 status === "待配送" ? "bg-[#2563EB]" :
                 status === "配送中" ? "bg-[#2563EB]" :
                 status === "履约完成" ? "bg-[#12B76A]" : "bg-[#E5484D]";
+              if (status === "待配送") {
+                const dv = d as any;
+                return (
+                  <div key={d.id} onClick={() => onDetail(d.id)}
+                    className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7] flex flex-col cursor-pointer active:border-[#BFDBFE] transition-all">
+                    <div className="h-1.5 bg-[#2563EB]" />
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-[#2563EB] bg-[#DCEBFF] px-2 py-0.5 rounded border border-[#BFDBFE]">{d.id}</span>
+                        <Tag label={status} color={statusColor(status)} dot />
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          { label: "关联补货单数", value: `${dv.replenishOrders?.length ?? 0} 单` },
+                          { label: "需配送商品件数", value: `${dv.totalItems ?? 0} 件` },
+                          { label: "配送车辆编码", value: dv.vehicleCode || "—" },
+                          { label: "需求履约时间", value: dv.deadline || "—" },
+                        ].map((row, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs py-1.5 border-b border-[#EEF4FB] last:border-0">
+                            <span className="text-[#5B6B84]">{row.label}</span>
+                            <span className="font-bold text-[#10233F]">{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="px-4 py-2.5 bg-[#F8FAFC] border-t border-[#E4EDF7] flex items-center justify-end">
+                      <span className="px-4 py-1.5 bg-[#2563EB] text-white rounded-xl text-xs font-bold">查看补货列表 →</span>
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <div
                   key={d.id}
@@ -1912,14 +1957,6 @@ const DeliveryList = ({ onDetail, onBack, tab, onTabChange }: {
                   </div>
                   <div className="px-4 py-2.5 bg-[#F8FAFC] border-t border-[#E4EDF7] flex items-center justify-between gap-2">
                     <span className="text-xs text-[#8A9BB4] flex-shrink-0">司机: <strong className="text-[#3A4B66]">{d.driver}</strong></span>
-                    {status === "待配送" && (
-                      <button
-                        onClick={() => setDeliveryStatusOverride(prev => ({ ...prev, [d.id]: "配送中" }))}
-                        className="px-4 py-1.5 bg-[#2563EB] active:bg-[#1E63B8] text-white rounded-xl text-xs font-bold transition-colors"
-                      >
-                        开始配送
-                      </button>
-                    )}
                     {(status === "履约完成" || status === "履约失败") && (
                       <button onClick={() => onDetail(d.id)} className="px-4 py-1.5 bg-[#EEF4FB] text-[#4A5C78] rounded-xl text-xs font-bold transition-colors active:bg-[#E4EDF7]">查看详情</button>
                     )}
@@ -2029,12 +2066,78 @@ const DeliveryTaskDetailPage = ({
 }) => {
   const d = DELIVERIES.find(x => x.id === delivId) ?? DELIVERIES[0];
   const [showContacts, setShowContacts] = useState(false);
+  const [detailTab, setDetailTab] = useState<"补货明细" | "下架明细">("补货明细");
 
   const CONTACTS = [
     { name: "张主任", role: "点位现场物管", phone: "138-8888-0001" },
     { name: "王大志", role: "线路责任司机", phone: "138-8888-0002" },
     { name: "李客服", role: "运维紧急热线", phone: "400-888-9999" },
   ];
+
+  // “待配送”状态详情页：展示补货列表
+  if (d.status === "待配送") {
+    const dv = d as any;
+    const orders: string[] = dv.replenishOrders ?? [];
+    const REPLENISH_DETAIL: Record<string, { orderId: string; goods: { name: string; qty: number; unit: string }[]; from: string; expectTime: string }[]> = {
+      [d.id]: orders.map((oid, idx) => ({
+        orderId: oid,
+        goods: [
+          { name: "可口可乐 330ml", qty: 24 + idx * 12, unit: "罐" },
+          { name: "农夫山泉 550ml", qty: 36 + idx * 8, unit: "瓶" },
+          { name: idx % 2 === 0 ? "乐事薯片原味 75g" : "元气森林苏打水 480ml", qty: 18 + idx * 6, unit: idx % 2 === 0 ? "包" : "瓶" },
+        ],
+        from: `仓库 WH-${String(idx + 1).padStart(2, "0")}`,
+        expectTime: `2025-09-14 ${14 + idx}:00`,
+      })),
+    };
+    const list = REPLENISH_DETAIL[d.id] ?? [];
+    return (
+      <div className="h-full flex flex-col bg-[#F4F8FD] relative">
+        <NavBar title="补货列表" onBack={onBack} />
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-4">
+          {/* Summary Card */}
+          <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-[#2563EB] bg-[#DCEBFF] px-2.5 py-0.5 rounded border border-[#BFDBFE]">{d.id}</span>
+              <Tag label="待配送" color={statusColor("待配送")} dot />
+            </div>
+            <div className="space-y-1.5 text-xs">
+              {[
+                { label: "关联补货单数", value: `${orders.length} 单` },
+                { label: "需配送商品件数", value: `${dv.totalItems ?? 0} 件` },
+                { label: "配送车辆编码", value: dv.vehicleCode || "—" },
+                { label: "需求履约时间", value: dv.deadline || "—" },
+              ].map((row, i) => (
+                <div key={i} className="flex justify-between py-1 border-b border-[#EEF4FB] last:border-0">
+                  <span className="text-[#5B6B84]">{row.label}</span>
+                  <span className="font-bold text-[#10233F]">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Replenishment Orders */}
+          {list.map((rp, idx) => (
+            <div key={idx} className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-[#6C8CFF] bg-[#EEF3FF] px-2 py-0.5 rounded border border-[#D6E0FF]">{rp.orderId}</span>
+                <span className="text-[10px] text-[#8A9BB4]">{rp.from}</span>
+              </div>
+              <div className="text-[10px] text-[#8A9BB4]">预计出库时间：{rp.expectTime}</div>
+              <div className="space-y-1.5">
+                {rp.goods.map((g, gi) => (
+                  <div key={gi} className="flex items-center justify-between text-xs py-1 border-b border-[#EEF4FB] last:border-0">
+                    <span className="text-[#3A4B66]">{g.name}</span>
+                    <span className="font-bold text-[#2563EB]">{g.qty} {g.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-[#F4F8FD] relative">
@@ -2097,25 +2200,57 @@ const DeliveryTaskDetailPage = ({
           </div>
         </div>
 
-        {/* Goods List Summary */}
+        {/* Tab: 补货明细 / 下架明细 */}
         <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7]">
-          <h3 className="text-xs font-bold text-[#5B6B84] uppercase mb-3">预存量补货明细</h3>
-          <div className="space-y-2.5">
-            {[
-              { name: "可口可乐 330ml", count: 48, unit: "罐", layer: "层 1" },
-              { name: "农夫山泉 550ml", count: 72, unit: "瓶", layer: "层 2" },
-              { name: "乐事薯片原味 75g", count: 30, unit: "包", layer: "层 3" },
-              { name: "元气森林苏打水 480ml", count: 24, unit: "瓶", layer: "层 4" },
-            ].map((sku, i) => (
-              <div key={i} className="flex items-center justify-between text-xs py-1.5 border-b border-[#EEF4FB] last:border-0">
-                <div>
-                  <span className="font-bold text-[#10233F]">{sku.name}</span>
-                  <span className="text-[10px] text-[#8A9BB4] ml-2">({sku.layer})</span>
-                </div>
-                <span className="font-bold text-[#2563EB]">{sku.count} {sku.unit}</span>
-              </div>
+          <div className="flex border-b border-[#EEF4FB] mb-3">
+            {(["补货明细", "下架明细"] as const).map(t => (
+              <button key={t} onClick={() => setDetailTab(t)}
+                className={`flex-1 py-2 text-xs font-bold border-b-2 transition-all ${
+                  detailTab === t ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-[#8A9BB4]"
+                }`}>
+                {t}
+              </button>
             ))}
           </div>
+
+          {detailTab === "补货明细" && (
+            <div className="space-y-2.5">
+              {[
+                { name: "可口可乐 330ml", count: 48, unit: "罐", layer: "层 1" },
+                { name: "农夫山泉 550ml", count: 72, unit: "瓶", layer: "层 2" },
+                { name: "乐事薯片原味 75g", count: 30, unit: "包", layer: "层 3" },
+                { name: "元气森林苏打水 480ml", count: 24, unit: "瓶", layer: "层 4" },
+              ].map((sku, i) => (
+                <div key={i} className="flex items-center justify-between text-xs py-1.5 border-b border-[#EEF4FB] last:border-0">
+                  <div>
+                    <span className="font-bold text-[#10233F]">{sku.name}</span>
+                    <span className="text-[10px] text-[#8A9BB4] ml-2">({sku.layer})</span>
+                  </div>
+                  <span className="font-bold text-[#2563EB]">{sku.count} {sku.unit}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {detailTab === "下架明细" && (() => {
+            const delistItems = DELIST_ITEMS_MAP[d.id] ?? DELIST_ITEMS_MAP[DELIVERIES[0].id];
+            return (
+              <div className="space-y-2.5">
+                {delistItems.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs py-1.5 border-b border-[#EEF4FB] last:border-0">
+                    <div>
+                      <span className="font-bold text-[#10233F]">{item.name}</span>
+                      <span className="text-[10px] text-[#8A9BB4] ml-2">({item.slot})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[#E5484D] font-bold bg-[#FEF3F3] px-1.5 py-0.5 rounded">{item.reason}</span>
+                      <span className="font-bold text-[#2563EB]">{item.qty}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -2193,6 +2328,79 @@ const DeliveryTaskDetailPage = ({
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 页面【下架明细】
+// ══════════════════════════════════════════════════════════════════════════════
+const DELIST_ITEMS_MAP: Record<string, { sku: string; name: string; spec: string; slot: string; qty: number; prodDate: string; reason: string }[]> = {
+  "DO-20250910-001": [
+    { sku: "SKU-S0006", name: "伊利纯牛奶250ml", spec: "250ml×24", slot: "A-03-02", qty: 24, prodDate: "2024-06-12", reason: "临期" },
+    { sku: "SKU-S0003", name: "旺旺雪饼68g", spec: "68g×30", slot: "B-01-04", qty: 36, prodDate: "2024-05-28", reason: "临期" },
+    { sku: "SKU-S0007", name: "三只松鼠坚果35g", spec: "35g×20", slot: "C-02-01", qty: 32, prodDate: "2024-07-02", reason: "临期" },
+  ],
+  "DO-20250910-006": [
+    { sku: "SKU-S0002", name: "可口可乐330ml", spec: "330ml×24", slot: "A-01-03", qty: 12, prodDate: "2024-08-10", reason: "破损" },
+    { sku: "SKU-S0005", name: "卫龙辣条40g", spec: "40g×20", slot: "D-02-02", qty: 8, prodDate: "2024-08-18", reason: "破损" },
+  ],
+  "DO-20250910-007": [
+    { sku: "SKU-S0004", name: "元气森林气泡水", spec: "480ml×15", slot: "A-04-02", qty: 24, prodDate: "2024-06-25", reason: "质量问题" },
+    { sku: "SKU-S0006", name: "伊利纯牛奶250ml", spec: "250ml×24", slot: "B-02-01", qty: 18, prodDate: "2024-06-20", reason: "质量问题" },
+  ],
+};
+
+const DeliveryDelistPage = ({ delivId, onBack }: { delivId: string; onBack: () => void }) => {
+  const d = DELIVERIES.find(x => x.id === delivId) ?? DELIVERIES[0];
+  const items = DELIST_ITEMS_MAP[delivId] ?? DELIST_ITEMS_MAP[DELIVERIES[0].id];
+  const totalQty = items.reduce((a, i) => a + i.qty, 0);
+
+  return (
+    <div className="h-full flex flex-col bg-[#F4F8FD] relative">
+      <NavBar title="下架明细" onBack={onBack} />
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-4">
+        {/* Summary Card */}
+        <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs font-bold text-[#2563EB] bg-[#DCEBFF] px-2.5 py-0.5 rounded border border-[#BFDBFE]">{d.id}</span>
+            <Tag label={d.status} color={statusColor(d.status)} dot />
+          </div>
+          <h3 className="text-sm font-bold text-[#10233F]">{d.pointName}</h3>
+          <div className="grid grid-cols-2 gap-2 bg-[#F8FAFC] p-3 rounded-xl border border-[#E4EDF7] text-center">
+            <div>
+              <div className="text-[10px] text-[#8A9BB4]">下架SKU数</div>
+              <div className="text-base font-bold text-[#10233F] mt-0.5">{items.length} 种</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-[#8A9BB4]">应下架总件数</div>
+              <div className="text-base font-bold text-[#2563EB] mt-0.5">{totalQty} 件</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Item List */}
+        <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_0_rgba(37,99,235,0.10)] border border-[#E4EDF7]">
+          <h3 className="text-xs font-bold text-[#5B6B84] uppercase mb-3">下架明细列表</h3>
+          <div className="space-y-3">
+            {items.map((item, idx) => (
+              <div key={idx} className="border border-[#EEF4FB] rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-[#8A9BB4] bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E4EDF7]">{item.sku}</span>
+                  <span className="text-[10px] text-[#E5484D] font-bold bg-[#FEF3F3] px-1.5 py-0.5 rounded">{item.reason}</span>
+                </div>
+                <div className="text-sm font-bold text-[#10233F]">{item.name}</div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                  <div className="flex justify-between"><span className="text-[#8A9BB4]">规格</span><span className="text-[#3A4B66] font-medium">{item.spec}</span></div>
+                  <div className="flex justify-between"><span className="text-[#8A9BB4]">货道号</span><span className="text-[#3A4B66] font-mono">{item.slot}</span></div>
+                  <div className="flex justify-between"><span className="text-[#8A9BB4]">应下架数量</span><span className="text-[#2563EB] font-bold">{item.qty}</span></div>
+                  <div className="flex justify-between"><span className="text-[#8A9BB4]">生产日期</span><span className="text-[#3A4B66]">{item.prodDate}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -3564,7 +3772,7 @@ type FMPage =
   | "workbench"
   | "inbound-list" | "inbound-detail" | "inbound-done-detail"
   | "pick-list" | "pick-detail" | "pick-print"
-  | "delivery-list" | "delivery-detail" | "delivery-exception" | "delivery-scan-open" | "delivery-restock-goods" | "delivery-photo-submit" | "delivery-action"
+  | "delivery-list" | "delivery-detail" | "delivery-delist" | "delivery-exception" | "delivery-scan-open" | "delivery-restock-goods" | "delivery-photo-submit" | "delivery-action"
   | "install-list" | "install-wo-detail" | "install-detail"
   | "error-qr" | "error-location" | "error-mismatch" | "error-offline" | "error-door"
   | "success-inbound" | "success-picking" | "success-stop" | "success-all" | "success-install"
@@ -3582,6 +3790,7 @@ const FM_NAV: FMPageConfig[] = [
   { section: "分拣", label: "打印分拣单视图", page: "pick-print" },
   { section: "配送", label: "配送任务列表", page: "delivery-list" },
   { section: "配送", label: "配送批次详情", page: "delivery-detail" },
+  { section: "配送", label: "下架明细", page: "delivery-delist" },
   { section: "配送", label: "配送动作（到达→拍照→扫码→完成）", page: "delivery-action" },
   { section: "装机", label: "装机工单列表", page: "install-list" },
   { section: "装机", label: "装机提交（扫码→拍照→提交）", page: "install-detail" },
@@ -3643,7 +3852,10 @@ export const FulfillmentMiniAppV2 = () => {
         return <PrintView batchId={selectedBatch} onBack={() => nav("pick-detail")} />;
       case "delivery-list":
         return <DeliveryList tab={tab} onTabChange={handleTabChange} onBack={() => nav("workbench")}
-          onDetail={id => { setSelectedDelivery(id); nav("delivery-detail"); }} />;
+          onDetail={id => { setSelectedDelivery(id); nav("delivery-detail"); }}
+          onDelistDetail={id => { setSelectedDelivery(id); nav("delivery-delist"); }} />;
+      case "delivery-delist":
+        return <DeliveryDelistPage delivId={selectedDelivery} onBack={() => nav("delivery-list")} />;
       case "delivery-detail":
         return <DeliveryTaskDetailPage delivId={selectedDelivery} onBack={() => nav("delivery-list")}
           onException={() => nav("delivery-exception")} onScanOpen={() => nav("delivery-scan-open")} />;
